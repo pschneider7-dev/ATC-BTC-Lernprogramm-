@@ -1,5 +1,6 @@
-/* Quellenverzeichnis. Nur öffentlich freigegebene Dokumente wurden ausgewertet.
-   ATP-3.3.2.1 und JFIRE sind als Print-Abgleich geführt; aus ihnen stammt kein Inhalt. */
+/* Quellenverzeichnis. Nur öffentlich freigegebene Dokumente wurden ausgewertet; alle Vorschriftentexte
+   der App sind wörtliche Zitate daraus (erzeugt von tools/build.py). ATP-3.3.2.1 und JFIRE sind als
+   Print-Abgleich geführt; aus ihnen stammt kein Inhalt. */
 (function () {
   var S = window.LP.sources;
 
@@ -12,7 +13,7 @@
     statusNote: 'Laut Vorschrift: „access to unclassified publications is unrestricted“.',
     url: 'https://www.bits.de/NRANEU/others/jp-doctrine/jp3_09_3(14).pdf',
     alt: 'https://irp.fas.org/doddir/dod/jp3_09_3.pdf',
-    used: 'Hauptquelle: Definitionen, Kontrollarten, Angriffsmethoden, Execution Template, Check-in, Situation Update, Game Plan, 9-Line, Remarks/Restrictions, Readback, Korrelation, Laser/IR, FSCM/ACM, Abort, BDA, Funkbeispiele (Anhang E).',
+    used: 'Hauptquelle, wörtlich zitiert: Definitionen, Kontrollarten, Angriffsmethoden, Execution Template, Check-in, Situation Update, Game Plan, 9-Line, RW 5-Line, Remarks/Restrictions, Readbacks, Korrelation, Laser/IR, FSCM/ACM, JFO, Gunship, Abort, BDA, Funkbeispiele.',
     note: 'Eine neuere Ausgabe vom 10. Juni 2019 existiert; ihr Volltext war für diese App nicht öffentlich abrufbar. Die NATO verwendet JP 3-09.3 laut der Vorschrift selbst als Grundlage für CAS (Kap. III, Abs. 26).'
   };
   S.jp309 = {
@@ -40,7 +41,7 @@
     publisher: 'NATO Standardization Office (veröffentlicht durch UK MOD)',
     status: 'öffentlich',
     url: 'https://assets.publishing.service.gov.uk/media/698ef9fb7da91680ad7f4389/AJP_3_3_EdC_V1.pdf',
-    used: 'NATO-Definitionen von CAS und AI, Doktrinhierarchie (AJP-3.3.2, ATP-3.3.2.1), ASOC, TACP, FAC(A), Air Tasking Cycle.'
+    used: 'Wörtlich zitiert: NATO-Definitionen von CAS und AI, Doktrinhierarchie (AJP-3.3.2, ATP-3.3.2.1), ASOC, TACP, FAC(A), Air Tasking Cycle, NATO-Agreed-Begriffe.'
   };
   S.atp30930 = {
     short: 'ATP 3-09.30',
@@ -50,7 +51,7 @@
     status: 'öffentlich',
     statusNote: '„Approved for public release; distribution is unlimited.“',
     url: 'https://armypubs.army.mil/epubs/DR_pubs/DR_a/pdf/web/ARN5011_ATP%203-09x30%20FINAL%20WEB.pdf',
-    used: 'Call for Fire, Danger Close (Steilfeuer), Strich und Mil-Formel, Beobachtungs- und Korrekturverfahren.'
+    used: 'Wörtlich zitiert: Call for Fire, Danger Close und Creeping Fire, Strich und Mil-Formel, OT-Faktor, Spotting und Korrekturverfahren.'
   };
   S.atp1021 = {
     short: 'ATP 1-02.1',
@@ -60,7 +61,7 @@
     status: 'öffentlich',
     statusNote: '„Approved for public release; distribution is unlimited.“',
     url: 'https://armypubs.army.mil/epubs/DR_pubs/DR_a/ARN43565-ATP_1-02.1-000-WEB-2.pdf',
-    used: 'Brevity-Begriffe inklusive Kennzeichnung, wo die Bedeutung von NATO abweicht (*) oder kein NATO-Begriff ist (**).'
+    used: 'Brevity-Definitionen im Originalwortlaut inklusive Kennzeichnung, wo die Bedeutung von NATO abweicht (*) oder kein NATO-Begriff ist (**).'
   };
   S.fm309 = {
     short: 'FM 3-09',
@@ -79,42 +80,6 @@
     status: 'öffentlich',
     url: 'https://armypubs.army.mil/epubs/DR_pubs/DR_a/ARN41789-ATP_3-52.2-000-WEB-2.pdf',
     used: 'Weiterführende Lektüre zu Führungsstrukturen (TACS, AAGS, ASOC, TACP).'
-  };
-  S.bw1 = {
-    short: 'Bundeswehr 2023',
-    title: 'Fliegerleitoffizier: Nichts für schwache Nerven (Übung Stoneage, Munster)',
-    edition: '2023',
-    publisher: 'bundeswehr.de',
-    status: 'öffentlich',
-    url: 'https://www.bundeswehr.de/de/organisation/heer/aktuelles/fliegerleitoffizier-nichts-fuer-schwache-nerven-5613540',
-    used: 'Begriff Fliegerleitoffizier, Übung Stoneage, Lizenz, Streitkräftegemeinsame Taktische Feuerunterstützung.'
-  };
-  S.bw2 = {
-    short: 'Bundeswehr FschJg',
-    title: 'Fallschirmjäger erhalten Fliegerleitausbildung',
-    edition: 'o. J.',
-    publisher: 'bundeswehr.de',
-    status: 'öffentlich',
-    url: 'https://www.bundeswehr.de/de/organisation/heer/aktuelles/fliegerleitausbildung-fallschirmjaegern-3090642',
-    used: 'Gliederung Feuerunterstützungszug, JFSCT und JFST, Anforderungen an JTAC.'
-  };
-  S.bw3 = {
-    short: 'Bundeswehr eFP',
-    title: 'EFP: Die Augen der Flieger am Boden',
-    edition: 'o. J.',
-    publisher: 'bundeswehr.de',
-    status: 'öffentlich',
-    url: 'https://www.bundeswehr.de/de/auftrag/verteidigung/enhanced-forward-presence-battlegroup-litauen-jtac--266140',
-    used: 'Rolle des JTAC als Bindeglied, multinationale Übung.'
-  };
-  S.bw4 = {
-    short: 'Bundeswehr GebJg',
-    title: 'Gebirgsjäger erhalten Luftunterstützung',
-    edition: 'o. J.',
-    publisher: 'bundeswehr.de',
-    status: 'öffentlich',
-    url: 'https://www.bundeswehr.de/de/organisation/heer/aktuelles/gebirgsjaeger-erhalten-luftunterstuetzung-5744436',
-    used: 'Fliegerleitoffiziere von Heer und Luftwaffe, Verbindungskommando Luftwaffe.'
   };
   S.atp3321 = {
     short: 'ATP-3.3.2.1',

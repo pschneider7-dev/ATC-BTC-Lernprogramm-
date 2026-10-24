@@ -23,7 +23,7 @@ SOURCES = {
 }
 
 # Where the main text begins (skips executive summaries that repeat the main text)
-HEADER_TOP = {'atp1021'}  # page id printed at the top of the page, not at the bottom
+HEADER_TOP = set()  # sources whose page id is printed at the top of the page
 
 BODY_START = {
     'jp3093': '1. Introduction a. Close air support (CAS) is a critical element',

@@ -338,7 +338,7 @@
     var pool = btPool();
     if (pool.length < 4) { bt.q = null; return; }
     var item = LP.pick(pool);
-    var others = LP.shuffle(LP.brevity.filter(function (b) { return b.t !== item.t && b.de !== item.de; })).slice(0, 3);
+    var others = LP.shuffle(LP.brevity.filter(function (b) { return b.t !== item.t && b.en !== item.en; })).slice(0, 3);
     bt.q = { item: item, opts: LP.shuffle([item].concat(others)) };
     bt.picked = null;
   }
@@ -353,18 +353,18 @@
     var it = bt.q.item;
     var answered = bt.picked !== null;
     h += '<div class="row small muted"><span>Runde: ' + bt.right + ' von ' + bt.total + ' richtig</span></div>';
-    h += '<div class="quiz-q">' + (bt.mode === 'term' ? '<span class="mono">' + esc(it.t) + '</span>' : esc(it.de)) + '</div><div class="options">' +
+    h += '<div class="quiz-q">' + (bt.mode === 'term' ? '<span class="mono">' + esc(it.t) + '</span>' : '<span class="en-def">' + esc(it.en) + '</span>') + '</div><div class="options">' +
       bt.q.opts.map(function (o, k) {
         var cls = 'option';
         if (answered) { if (o === it) cls += ' right'; else if (k === bt.picked) cls += ' wrong'; }
-        return '<button type="button" class="' + cls + '" data-bt="' + k + '"' + (answered ? ' disabled' : '') + '><span class="ol">' + 'ABCD'[k] + '</span><span>' + (bt.mode === 'term' ? esc(o.de) : '<span class="mono">' + esc(o.t) + '</span>') + '</span></button>';
+        return '<button type="button" class="' + cls + '" data-bt="' + k + '"' + (answered ? ' disabled' : '') + '><span class="ol">' + 'ABCD'[k] + '</span><span>' + (bt.mode === 'term' ? '<span class="en-def">' + esc(o.en) + '</span>' : '<span class="mono">' + esc(o.t) + '</span>') + '</span></button>';
       }).join('') + '</div>';
     if (answered) {
       var ok = bt.q.opts[bt.picked] === it;
       h += '<div class="feedback ' + (ok ? 'ok' : 'bad') + '"><span class="ft">' + esc(it.t) + (it.nato ? ' <span class="chip ' + (it.nato === '**' ? 'crit' : 'warn') + '">' + it.nato + '</span>' : '') + '</span>' +
-        '<div>' + esc(it.de) + '</div><div class="small muted">' + esc(it.en) + '</div>' +
+        '<div class="en-def">' + esc(it.en) + '</div><div class="small muted">Kurzhilfe: ' + esc(it.de) + '</div>' +
         (it.nato ? '<div class="small">' + (it.nato === '**' ? 'Kein NATO-Brevity-Begriff – in NATO-Verfahren nicht voraussetzen; in der ATP prüfen, ob ein anderer Begriff verwendet wird.' : 'Die NATO-Bedeutung weicht ab – in der ATP bzw. NATO-Brevity nachsehen.') + '</div>' : '') +
-        LP.srcChips([['atp1021', 'Kap. I']]) + '</div><div class="row"><button class="btn accent" type="button" data-act="bt-next">Nächster Begriff</button></div>';
+        LP.srcChips(it.src) + '</div><div class="row"><button class="btn accent" type="button" data-act="bt-next">Nächster Begriff</button></div>';
     }
     h += '</div>';
     return h;

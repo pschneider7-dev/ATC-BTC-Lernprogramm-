@@ -446,6 +446,34 @@ a.chip:hover { border-color: var(--accent); color: var(--ink); }
   color: var(--ink-2);
   font-style: italic;
 }
+/* Wörtliches Zitat aus einer Vorschrift (erzeugt von tools/build.py) */
+.prose blockquote.quote {
+  font-style: normal;
+  color: var(--ink);
+  background: var(--card);
+  border-left: 3px solid var(--nato);
+  border-radius: 0 var(--r) var(--r) 0;
+  padding: 0.7rem 1rem 0.6rem;
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+.quote p { margin: 0; }
+.quote ul { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.25rem; }
+.quote cite, .doc-table cite {
+  font: 500 0.74rem var(--f-mono);
+  font-style: normal;
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+  justify-self: end;
+}
+.callout blockquote.quote { background: transparent; border-left: 0; padding: 0; }
+.qt { font-style: normal; }
+.en-def { white-space: pre-line; }
+.doc-table { margin: 0; display: grid; gap: 0.45rem; min-width: 0; }
+.doc-table figcaption { font-weight: 600; }
+.doc-table .table-foot { margin: 0; font-size: var(--step--1); color: var(--ink-2); }
 .prose .def {
   border: 1px solid var(--rule);
   background: var(--card);

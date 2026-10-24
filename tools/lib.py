@@ -218,3 +218,63 @@ def render(items):
         else:
             raise TypeError(it)
     return ''.join(out), refs
+
+
+def push_js(var, items):
+    """Data file that appends items to window.LP.<var>."""
+    import json
+    body = ',\n   '.join(json.dumps(x, ensure_ascii=False) for x in items)
+    return '(function () {\n  var L = window.LP.%s;\n  [\n   %s\n  ].forEach(function (x) { L.push(x); });\n})();\n' % (var, body)
+
+
+def _mark(text):
+    m = re.match(r'^\*{0,2}\d+\.\s*', text)
+    t = text[m.end():] if m and not text.startswith('*') else text
+    if t.startswith('**') or text.startswith('**'):
+        return '**'
+    if t.startswith('* ') or text.startswith('* '):
+        return '*'
+    return ''
+
+
+def brevity_js(items):
+    """Brevity entries: (category, term key, German gloss[, meaning numbers])."""
+    import brevity_table
+    rows = {brevity_table.key(r['term']): r for r in brevity_table.parse()}
+    count = {}
+    for it in items:
+        count[it[1]] = count.get(it[1], 0) + 1
+    out = []
+    for it in items:
+        cat, k, de = it[:3]
+        pick = it[3] if len(it) > 3 else None
+        r = rows[k]
+        meanings = r['def'].split('\n')
+        if pick:
+            chosen = [m for m in meanings if int(re.match(r'^\*{0,2}(\d+)\.', m).group(1)) in pick]
+            if len(chosen) != len(pick):
+                raise ValueError('brevity %s: meanings %r not found' % (k, pick))
+        else:
+            chosen = meanings
+        marks = [_mark(m) for m in chosen]
+        nato = '**' if '**' in marks else ('*' if '*' in marks else '')
+        en = '\n'.join(chosen).replace(' NOTE ', '\nNOTE ')
+        t = r['term'] + ((' (%s)' % ', '.join(map(str, pick))) if pick and count[k] > 1 else '')
+        out.append({'t': t, 'nato': nato, 'en': en, 'de': de, 'cat': cat, 'src': [['atp1021', 'p. ' + r['page']]]})
+    return push_js('brevity', out)
+
+
+def GL(key, term):
+    """Glossary entry of a publication, word for word: 'term. Definition. (JP 1-02. SOURCE: …)'."""
+    s = quote.src(key)
+    t = s.search
+    gl0 = next(st for st, (p, pg) in zip(s.starts, s.paras) if pg.startswith(('GL', 'LEX')))
+    sep = r' ' if key == 'ajp33' else r'\. '
+    m = re.search(r'(?:(?<=\n)|(?<=\) )|(?<=\)\. )|(?<=Glossary )|(?<=phosphorous ))' + re.escape(term) + sep, t[gl0:])
+    if not m:
+        raise ValueError('%s: no glossary entry %r' % (SHORT[key], term))
+    i = gl0 + m.start()
+    e = re.search(r'\((?:JP 1-0?2|Approved|NATO Agreed|AAP)[^)]*\)(?:\))?\.?', t[i:])
+    q = Quote.__new__(Quote)
+    q.key, q.text, q.page = key, s.text[i:i + e.end()].strip(), s.page_at(i)
+    return q

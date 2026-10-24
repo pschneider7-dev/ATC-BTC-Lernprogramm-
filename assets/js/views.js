@@ -346,7 +346,7 @@
   V.glossFilter = { q: '', letter: '' };
   V.glossar = function () {
     var h = '<div class="view narrow"><div class="page-head"><div class="eyebrow">Nachschlagen</div><h1>Glossar</h1>' +
-      '<p class="lead">Abkürzungen und Begriffe aus CAS, Feuerunterstützung und Luftraumkoordinierung – englischer Originalbegriff mit deutscher Erklärung.</p></div>' +
+      '<p class="lead">Abkürzungen und Begriffe aus CAS, Feuerunterstützung und Luftraumkoordinierung. Die Definition steht im Originalwortlaut der Vorschrift, mit Fundstelle.</p></div>' +
       '<div class="field"><label for="gloss-q">Suchen</label><input type="search" id="gloss-q" placeholder="z. B. FSCL, Danger Close, Korrelation" value="' + esc(V.glossFilter.q) + '"></div>' +
       '<div class="letter-nav" role="group" aria-label="Anfangsbuchstabe">' + '#ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(function (L) {
         var v = L === '#' ? '' : L;
@@ -366,7 +366,7 @@
     return '<p class="small muted">' + list.length + ' Einträge</p><div class="gloss-list">' + list.map(function (g) {
       var m = g.m ? LP.moduleById(g.m) : null;
       return '<div class="gloss-item"><div class="gt">' + esc(g.t) + '</div><div class="gd">' + (g.l ? '<span class="gl">' + esc(g.l) + '</span>' : '') +
-        '<span>' + g.d + '</span>' + (m ? '<a class="small" href="#' + m.id + '">Modul ' + m.nr + ': ' + esc(m.title) + '</a>' : '') + '</div></div>';
+        (g.d ? '<span class="en-def">' + g.d + '</span>' + LP.srcChips(g.src) : '') + (m ? '<a class="small" href="#' + m.id + '">Modul ' + m.nr + ': ' + esc(m.title) + '</a>' : '') + '</div></div>';
     }).join('') + '</div>';
   }
   V.glossResults = glossResults;
@@ -377,7 +377,7 @@
     var cats = [];
     LP.brevity.forEach(function (b) { if (cats.indexOf(b.cat) < 0) cats.push(b.cat); });
     var h = '<div class="view narrow"><div class="page-head"><div class="eyebrow">Nachschlagen</div><h1>Brevity</h1>' +
-      '<p class="lead">CAS-relevante Begriffe aus ATP 1-02.1 (April 2025). <span class="chip warn">*</span> Bedeutung weicht von der NATO-Brevity ab. <span class="chip crit">**</span> kein NATO-Brevity-Begriff. Ohne Zeichen: gleiche Bedeutung wie NATO.</p></div>' +
+      '<p class="lead">CAS-relevante Begriffe aus ATP 1-02.1 (April 2025), Definition im Originalwortlaut, darunter eine deutsche Kurzhilfe. <span class="chip warn">*</span> Bedeutung weicht von der NATO-Brevity ab. <span class="chip crit">**</span> kein NATO-Brevity-Begriff. Ohne Zeichen: gleiche Bedeutung wie NATO.</p></div>' +
       '<div class="two-col"><div class="field"><label for="brev-q">Suchen</label><input type="search" id="brev-q" placeholder="Begriff oder Bedeutung" value="' + esc(V.brevFilter.q) + '"></div>' +
       '<div class="two-col"><div class="field"><label for="brev-cat">Bereich</label><select id="brev-cat"><option value="">alle</option>' +
       cats.map(function (c) { return '<option' + (V.brevFilter.cat === c ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '</select></div>' +
@@ -398,16 +398,16 @@
     if (!list.length) return '<p class="empty">Kein Begriff gefunden.</p>';
     return '<p class="small muted">' + list.length + ' Begriffe</p><div class="gloss-list">' + list.map(function (b) {
       return '<div class="gloss-item"><div class="gt">' + esc(b.t) + (b.nato ? ' <span class="chip ' + (b.nato === '**' ? 'crit' : 'warn') + '">' + b.nato + '</span>' : '') + '</div>' +
-        '<div class="gd"><span>' + esc(b.de) + '</span><span class="gl">' + esc(b.en) + '</span><span class="small muted">' + esc(b.cat) + (b.note ? ' · ' + esc(b.note) : '') + '</span></div></div>';
+        '<div class="gd"><span class="en-def">' + esc(b.en) + '</span><span class="gl">' + esc(b.de) + '</span><span class="small muted">' + esc(b.cat) + '</span>' + LP.srcChips(b.src) + '</div></div>';
     }).join('') + '</div>';
   }
   V.brevResults = brevResults;
 
   /* ---------- Quellen ---------- */
   V.quellen = function () {
-    var order = ['jp3093', 'ajp33', 'atp1021', 'atp30930', 'jp309', 'jp352', 'fm309', 'atp3522', 'bw1', 'bw2', 'bw3', 'bw4', 'atp3321', 'jfire'];
+    var order = ['jp3093', 'ajp33', 'atp1021', 'atp30930', 'jp309', 'jp352', 'fm309', 'atp3522', 'atp3321', 'jfire'];
     var h = '<div class="view narrow"><div class="page-head"><div class="eyebrow">Nachschlagen</div><h1>Quellen</h1>' +
-      '<p class="lead">Alle Inhalte beruhen auf öffentlich freigegebenen Dokumenten, die im Volltext ausgewertet wurden. Die beiden Lehrgangsvorschriften sind als Print-Abgleich geführt.</p></div><div class="stack">';
+      '<p class="lead">Alle Vorschriftentexte in dieser App sind wörtliche Zitate aus öffentlich freigegebenen Dokumenten, jeweils mit Seitenangabe. Die beiden Lehrgangsvorschriften sind als Print-Abgleich geführt.</p></div><div class="stack">';
     order.forEach(function (id) {
       var s = LP.sources[id];
       if (!s) return;
