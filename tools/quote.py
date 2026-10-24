@@ -23,6 +23,8 @@ SOURCES = {
 }
 
 # Where the main text begins (skips executive summaries that repeat the main text)
+HEADER_TOP = {'atp1021'}  # page id printed at the top of the page, not at the bottom
+
 BODY_START = {
     'jp3093': '1. Introduction a. Close air support (CAS) is a critical element',
     'ajp33': '1. Allied Joint Publication (AJP)-3.3, Allied Joint Doctrine for Air and Space Operations sits under',
@@ -44,6 +46,8 @@ def _footer_page(line, short):
         rf'^{DATE}\s+{doc}\s+({PAGE_ID})$',             # 28 September 2017  ATP 3-09.30  3-3
         rf'^({PAGE_ID})\s+{doc}\s+{DATE}$',
         r'^(\S+)\s+Edition C Version 1(?:\s+.*)?$',   # AJP-3.3 (also annex pages)
+        rf'^\d{{1,2}} [A-Z]+ \d{{4}}\s+{doc}/.+?\s+({PAGE_ID}|[ivx]+)$',   # 25 APRIL 2025  ATP 1-02.1/MCRP …  3
+        rf'^({PAGE_ID}|[ivx]+)\s+{doc}/.+?\s+\d{{1,2}} [A-Z]+ \d{{4}}$',
     ]
     for p in pats:
         m = re.match(p, s)
@@ -73,16 +77,16 @@ class Source:
         self.key, self.short = key, short
         with open(os.path.join(SRC_DIR, fname), encoding='utf-8') as f:
             raw = f.read().split('\n')
-        # 1) assign pages: footer comes at the end of each page
-        pages, cur = [], []
+        # 1) assign pages: footer comes at the end of each page (or a header at the top)
+        pages, cur, top = [], [], ''
         for line in raw:
             pg = _footer_page(line, short)
             if pg is not None:
-                pages.append((pg, cur))
-                cur = []
+                pages.append((top if key in HEADER_TOP else pg, cur))
+                cur, top = [], pg
             else:
                 cur.append(line)
-        pages.append(('', cur))
+        pages.append((top if key in HEADER_TOP else '', cur))
         # 2) drop running heads at the top of each page, build paragraphs with page ids
         paras = []  # [text, page]
         for pg, lines in pages:

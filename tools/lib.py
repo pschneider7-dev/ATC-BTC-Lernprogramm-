@@ -12,6 +12,18 @@ def esc(s):
     return html.escape(str(s), quote=False)
 
 
+BULLET = '\uf06c'  # list bullet glyph (Wingdings) in the ATP/FM text layer
+
+
+def _para_html(p):
+    """Paragraph; an in-line bulleted list becomes a list again."""
+    head, *items = [x.strip() for x in p.split(BULLET)]
+    out = ('<p>' + esc(head) + '</p>') if head else ''
+    if items:
+        out += '<ul>' + ''.join('<li>' + esc(i) + '</li>' for i in items) + '</ul>'
+    return out
+
+
 class Quote:
     """Verbatim extract: from `start` to `end` (inclusive), or `n` whole paragraphs, or the rest of the paragraph."""
 
@@ -50,12 +62,12 @@ class Quote:
         return out
 
     def html(self, cite=True):
-        body = ''.join('<p>' + esc(p) + '</p>' for p in self.paras())
+        body = ''.join(_para_html(p) for p in self.paras())
         return '<blockquote class="quote">' + body + ('<cite>' + esc(self.cite()) + '</cite>' if cite else '') + '</blockquote>'
 
     def inline(self):
         """Quote without block markup (for card answers, explanations)."""
-        return '<span class="qt">' + '<br><br>'.join(esc(p) for p in self.paras()) + '</span>'
+        return '<span class="qt">' + '<br><br>'.join(esc(p).replace(BULLET, '<br>•') for p in self.paras()) + '</span>'
 
 
 def Q(*a, **k):
@@ -114,9 +126,36 @@ class KB:
                 'src': [self.src] if self.src else []}
 
 
+class TABLE:
+    """Table copied cell for cell from a publication. src = [key, 'table/page']."""
+
+    def __init__(self, title, head, rows, foot='', src=None):
+        self.title, self.head, self.rows, self.foot, self.src = title, head, rows, foot, src
+        if src:
+            text = quote.src(src[0]).search
+            missing = [c for r in rows for c in r if c and str(c) not in text]
+            if missing:
+                raise ValueError('TABLE %r: not in %s: %r' % (title, src[0], missing))
+
+    def html(self):
+        cite = (SHORT[self.src[0]] + ', ' + self.src[1]) if self.src else ''
+        out = ['<figure class="doc-table"><figcaption>%s</figcaption><div class="table-wrap"><table class="data"><thead><tr>' % esc(self.title)]
+        out += ['<th>%s</th>' % esc(h) for h in self.head]
+        out.append('</tr></thead><tbody>')
+        for r in self.rows:
+            out.append('<tr>' + ''.join('<td class="mono">%s</td>' % esc(c) for c in r) + '</tr>')
+        out.append('</tbody></table></div>')
+        if self.foot:
+            out.append('<p class="table-foot">%s</p>' % esc(self.foot))
+        if cite:
+            out.append('<cite>%s</cite>' % esc(cite))
+        out.append('</figure>')
+        return ''.join(out)
+
+
 RADIO_LABELS = {'JTAC': 'JTAC', 'AIR': 'Attack aircraft', 'AIR2': 'Dash 2', 'OBS': 'Observer', 'FAC': 'FAC(A)',
                 'JFO': 'JFO', 'LAS': 'Lasing platform', 'FDC': 'FDC', 'FO': 'Observer'}
-JTAC_SIDE = ('JTAC', 'FAC', 'JFO')
+JTAC_SIDE = ('JTAC', 'FAC', 'JFO', 'FO', 'OBS')
 
 
 class RADIO:
@@ -168,7 +207,7 @@ def render(items):
         elif isinstance(it, KB):
             out.append(it.html())
             addref(it.src)
-        elif isinstance(it, RADIO):
+        elif isinstance(it, (RADIO, TABLE)):
             out.append(it.html())
             addref(it.src)
         elif isinstance(it, NOTE):
