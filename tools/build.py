@@ -66,7 +66,7 @@ def build_list(modname, var, render_item):
 
 if __name__ == '__main__':
     build_modules()
-    for extra in ('cards', 'quiz', 'glossary', 'brevity', 'scripts', 'spick', 'drills', 'plan'):
+    for extra in ('cards', 'quiz', 'glossary', 'brevity', 'scripts', 'spick', 'sequences', 'kontrolle', 'calcrefs'):
         try:
             mod = importlib.import_module(extra)
         except ModuleNotFoundError:

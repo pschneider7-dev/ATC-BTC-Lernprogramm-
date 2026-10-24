@@ -2,6 +2,8 @@
 
 Ein Lernprogramm zur Vorbereitung auf den JTAC Basic Training Course (BTC) und den Advanced Training Course (ATC). Es ist aus **öffentlich freigegebenen** US- und NATO-Vorschriften aufgebaut.
 
+**Alles, was aus einer Vorschrift stammt, steht im englischen Originalwortlaut** – Modultexte, Definitionen, Formate, Brevity, Funksprüche und die Begründungen zu Quiz, Karten und Trainern, jeweils mit Seitenangabe. Deutsch sind nur Bedienung, Fragen, Lagebeschreibungen der Trainer und Rechenwege.
+
 ## Starten
 
 Öffne `index.html` in einem aktuellen Browser (Chrome, Edge, Firefox, Safari). Du brauchst weder Server noch Installation, und offline funktioniert alles. Nur die Schriftarten kommen aus dem Internet; ohne Netz nutzt der Browser Ersatzschriften.
@@ -12,22 +14,22 @@ Dein Fortschritt bleibt im `localStorage` dieses Browsers: gelesene Abschnitte, 
 
 | Bereich | Umfang |
 |---|---|
-| Module | 14 Module mit 84 Abschnitten, je mit Quellenangabe auf Kapitel- bzw. Absatzebene |
-| Spickzettel | 16 Kniebrett-Karten (Execution Template, MNPOPCA, 9-Line, Remarks/Restrictions, 5-Line, JFO-Brief, CFF, SALTR, TLE, Laser, IR, Faustformeln, FIDO, FSCM …) |
-| Karteikarten | 206 Karten mit Leitner-System (5 Fächer) |
-| Quiz & Prüfung | 187 Fragen, Übungs- und Prüfungsmodus (bestanden ab 80 %) |
+| Module | 14 Module mit 93 Abschnitten aus wörtlichen Zitaten, Abbildungen als Kniebrett-Karten und Tabellen |
+| Spickzettel | 17 Kniebrett-Karten aus den Abbildungen (Execution Template, Check-in, 9-Line, Kontrollarten, Clearance Calls, RW 5-Line, JFO-Brief, Gunship-CFF, INFLTREP, SALTR, FIDO, TLE, Laser-, IR- und Marking-Brevity, Keyhole, SEAD-Faustformel) |
+| Karteikarten | 140 Karten mit Leitner-System (5 Fächer); Antwort = Originalzitat |
+| Quiz & Prüfung | 96 Fragen, Übungs- und Prüfungsmodus (bestanden ab 80 %); Antwortoptionen im Wortlaut der Vorschrift, Begründung als Zitat |
 | 9-Line-Trainer | 6 feste Lagen und beliebig viele Zufallslagen mit Prüfung jeder Zeile und der Readback-Pflichten |
-| Kontrollart-Trainer | 12 Lagen: Type 1/2/3 und BOT/BOC mit Begründung |
-| Reihenfolge-Trainer | 16 Formate und Abläufe |
-| Rechentrainer | 14 Aufgabentypen mit Zufallswerten (Line 8, Line 2, m→ft, km→NM, Strich, Mil-Formel, OT-Faktor, Laser-Geometrie, Keyhole, TLE, MGRS, Danger Close, SEAD, FAH) |
-| Brevity | 119 CAS-relevante Begriffe aus ATP 1-02.1 (2025) mit NATO-Kennzeichnung, plus Trainer |
-| Funkbeispiele | 9 Abläufe nach JP 3-09.3 Anhang E, JTAC-Funksprüche verdeckbar, mit Fragen |
-| Glossar | 168 Abkürzungen und Begriffe |
+| Kontrollart-Trainer | 12 Lagen: Type 1/2/3 und BOT/BOC, aufgelöst mit den Definitionen aus JP 3-09.3 |
+| Reihenfolge-Trainer | 15 Formate und Abläufe, alle Bausteine im Originalwortlaut |
+| Rechentrainer | 18 Aufgabentypen mit Zufallswerten, darunter die **MKS-Formel** (Meter = Kilometer × Strich) in fünf Varianten: Meter, Kilometer, Strich, Seitenverschiebung vom Bezugspunkt und Sprenghöhe (HOB). Zu jeder Lösung die Regel aus der Vorschrift |
+| Brevity | 119 CAS-relevante Begriffe, Definition wörtlich aus ATP 1-02.1 (2025) Tabelle 2 mit NATO-Kennzeichnung und deutscher Kurzhilfe, plus Trainer |
+| Funkbeispiele | Die 9 Beispiele aus JP 3-09.3 Anhang E vollständig im Wortlaut plus RW 5-Line, Controller-Funksprüche verdeckbar, mit Fragen |
+| Glossar | 140 Abkürzungen, davon 82 mit Definition im Wortlaut (Glossare von JP 3-09.3, JP 3-09, JP 3-52, AJP-3.3 oder definierende Textstelle) |
 | Lernplan | 8 Wochen mit Aufgaben zum Abhaken |
 
 ## Quellen
 
-Die Inhalte stammen aus diesen öffentlich zugänglichen Dokumenten. Die genauen Fundstellen stehen in der App unter **Quellen**.
+Alle Inhalte stammen aus diesen öffentlich zugänglichen Dokumenten. Die Fundstellen stehen in der App an jedem Zitat und unter **Quellen**.
 
 - JP 3-09.3 *Close Air Support* (25. November 2014)
 - JP 3-09 *Joint Fire Support* (2014)
@@ -37,7 +39,6 @@ Die Inhalte stammen aus diesen öffentlich zugänglichen Dokumenten. Die genauen
 - ATP 1-02.1 *Multi-Service Brevity Codes* (2025)
 - FM 3-09 *Fire Support and Field Artillery Operations* (2024)
 - ATP 3-52.2 *TAGS* (2024)
-- Veröffentlichungen der Bundeswehr (bundeswehr.de) zu Fliegerleitoffizieren, JFST/JFSCT und der Übung Stoneage
 
 ## Was bewusst fehlt
 
@@ -49,18 +50,29 @@ Die Inhalte stammen aus diesen öffentlich zugänglichen Dokumenten. Die genauen
 
 - Die öffentlich verfügbare JP 3-09.3 ist die Ausgabe von **2014**. Die neuere Ausgabe war nicht öffentlich abrufbar.
 - Wo die NATO von den US-Verfahren abweicht, gilt im Lehrgang die **ATP-3.3.2.1**. JP 3-09.3 nennt selbst zwei Abweichungen: NATO-Controller sprechen die Zeilentitel, und Line 8 ist Pflicht-Readback.
+- Zitate geben die Vorschrift wörtlich wieder, auch ihre Tippfehler (z. B. „directiion“ in Fig. V-9).
 - Das Programm ist eine private Lernhilfe. Es ersetzt weder Vorschrift noch Ausbildung.
 
 ## Aufbau
 
 ```
-index.html            Einstieg
-assets/css/app.css    Gestaltung (hell/dunkel, Telefon bis Desktop)
-assets/js/core.js     Namensraum, Speicher, Bausteine (Kniebrett, Funk, Hinweise)
-assets/js/views.js    Start, Module, Karten, Quiz, Glossar, Brevity, Quellen, Plan, Daten
-assets/js/drills.js   Trainer, Funkbeispiele, Spickzettel
-assets/js/main.js     Router (#start, #m05, #m05-m05s3, #quiz …), Ereignisse
-data/                 Inhalte als JavaScript-Dateien (laufen auch ohne Server)
+index.html             Einstieg
+assets/css/app.css     Gestaltung (hell/dunkel, Telefon bis Desktop)
+assets/js/core.js      Namensraum, Speicher, Bausteine (Kniebrett, Funk, Hinweise)
+assets/js/views.js     Start, Module, Karten, Quiz, Glossar, Brevity, Quellen, Plan, Daten
+assets/js/drills.js    Trainer, Funkbeispiele, Spickzettel
+assets/js/main.js      Router (#start, #m05, #m05-m05s3, #quiz …), Ereignisse
+data/                  Inhalte als JavaScript-Dateien (laufen auch ohne Server)
+tools/                 Erzeugt die Inhalte aus den Vorschriften (siehe unten)
 ```
+
+### Inhalte erzeugen
+
+Fast alle Dateien in `data/` werden von `tools/build.py` erzeugt und tragen den Hinweis „Generated by tools/build.py“. Von Hand gepflegt sind nur `data/drills.js` (9-Line-Lagen), `data/plan.js` und `data/sources.js`.
+
+1. Die öffentlichen PDFs mit `pdftotext -layout` nach `tools/src/` umwandeln (Dateinamen siehe `tools/quote.py`, `SOURCES`). Der Ordner ist nicht im Repository.
+2. `python3 tools/build.py` ausführen.
+
+`tools/content/*.py` legt nur fest, **welche** Stelle zitiert wird (Anfangs- und Endphrase, Absatzzahl oder Satzzahl). Den Text selbst liest `tools/quote.py` aus der Vorschrift; findet er eine Phrase nicht oder nicht eindeutig, bricht der Build ab. Abbildungen werden Satz für Satz gegen den Vorschriftentext geprüft. So kann kein umformulierter Text in die App gelangen.
 
 Neue Karteikarten und Quizfragen gehören jeweils **ans Ende** eines Moduls. Die IDs werden fortlaufend vergeben, und der Lernstand hängt an ihnen.

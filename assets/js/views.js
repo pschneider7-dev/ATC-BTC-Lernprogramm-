@@ -75,7 +75,7 @@
     var secs = allSections();
     var read = secs.filter(function (x) { return LP.state.read[x.s.id]; }).length;
     var next = secs.filter(function (x) { return !LP.state.read[x.s.id]; })[0];
-    var learned = Object.keys(LP.state.cards).filter(function (k) { return LP.state.cards[k].box >= 3; }).length;
+    var learned = LP.cards.filter(function (c) { var st = LP.state.cards[c.id]; return st && st.box >= 3; }).length;
     var quizzes = LP.state.quiz || [];
     var lastQ = quizzes.length ? quizzes[quizzes.length - 1] : null;
     var atp = atpTotals();
@@ -85,7 +85,7 @@
     h += '<section class="hero"><div class="stack-lg">' +
       '<div class="eyebrow">Vorbereitung JTAC Basic und Advanced Training Course</div>' +
       '<h1>Close Air Support <span>lernen</span>, bevor der Lehrgang beginnt.</h1>' +
-      '<p class="lead">14 Module, ' + LP.cards.length + ' Karteikarten, ' + LP.quiz.length + ' Prüfungsfragen und sechs Trainer – aufgebaut auf öffentlich freigegebenen Vorschriften, vor allem JP 3-09.3. Jedes Modul sagt dir, was du in deiner ATP-3.3.2.1 abgleichen sollst.</p>' +
+      '<p class="lead">14 Module, ' + LP.cards.length + ' Karteikarten, ' + LP.quiz.length + ' Prüfungsfragen und sechs Trainer. Alle Vorschriftentexte und Definitionen stehen im englischen Originalwortlaut mit Seitenangabe – aus öffentlich freigegebenen Vorschriften, vor allem JP 3-09.3. Jedes Modul sagt dir, was du in deiner ATP-3.3.2.1 abgleichen sollst.</p>' +
       '<div class="row">' +
       (next ? '<a class="btn accent" href="#' + next.m.id + '-' + next.s.id + '">Weiterlernen: ' + esc(next.m.nr + '.' + (next.m.sections.indexOf(next.s) + 1) + ' ' + next.s.title) + '</a>' : '<a class="btn accent" href="#quiz">Probeprüfung starten</a>') +
       '<a class="btn ghost" href="#karten">Karteikarten' + (due ? ' (' + due + ' fällig)' : '') + '</a></div>' +
@@ -388,7 +388,8 @@
   function brevResults() {
     var f = V.brevFilter;
     var q = f.q.trim().toLowerCase();
-    var list = LP.brevity.slice().sort(function (a, b) { return a.t.localeCompare(b.t); }).filter(function (b) {
+    var bkey = function (t) { return t.replace(/^\[[^\]]*\]\s*/, ''); };
+    var list = LP.brevity.slice().sort(function (a, b) { return bkey(a.t).localeCompare(bkey(b.t)); }).filter(function (b) {
       if (f.cat && b.cat !== f.cat) return false;
       if (f.nato === 'same' && b.nato) return false;
       if (f.nato === 'diff' && !b.nato) return false;

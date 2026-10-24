@@ -169,14 +169,16 @@
   // Funkverkehr: [["JTAC","…"],["AIR","…"],["note","…"]]
   LP.radio = function (lines, opts) {
     opts = opts || {};
-    var labels = { JTAC: 'JTAC', AIR: 'Luftfahrzeug', AIR2: 'Lfz Nr. 2', JFO: 'JFO', FAC: 'FAC(A)', AO: 'AO / ALO', OBS: 'Beobachter', FDC: 'FDC', FO: 'Beobachter', LAS: 'Beleuchter', RW: 'Hubschrauber', FW: 'Jet' };
+    // Rollen wie in den Vorschriften bezeichnet (JP 3-09.3 Anhang E, ATP 3-09.30)
+    var labels = { JTAC: 'JTAC', AIR: 'Attack Aircraft', AIR2: 'Attack Aircraft Dash 2', JFO: 'JFO', FAC: 'FAC(A)', AO: 'Air Officer', OBS: 'Observer', FDC: 'Fire Direction Center', FO: 'Observer', LAS: 'Lasing platform' };
     return '<div class="radio">' + lines.map(function (l, i) {
       var who = l[0];
       if (who === 'note') {
         return '<div class="tx note"><span class="who">–</span><div class="msg">' + l[1] + '</div></div>';
       }
-      var isJ = who === 'JTAC' || who === 'FAC' || who === 'JFO' || who === 'AO';
-      var hide = opts.hideJtac && isJ;
+      var ctl = who.indexOf('JTAC') === 0 || /FAC\(A\)$/.test(who) || who === 'FAC';
+      var isJ = ctl || who === 'JFO' || who === 'AO' || who === 'OBS' || who === 'FO';
+      var hide = opts.hideJtac && ctl;
       return '<div class="tx' + (isJ ? ' jtac' : '') + '"><span class="who">' + LP.esc(labels[who] || who) +
         '</span><div class="msg' + (hide ? ' hidden-call' : '') + '"' + (hide ? ' data-reveal="' + i + '" tabindex="0" role="button" aria-label="Funkspruch aufdecken"' : '') + '>' + l[1] + '</div></div>';
     }).join('') + '</div>';

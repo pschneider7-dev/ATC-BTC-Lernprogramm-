@@ -121,7 +121,7 @@ class KB:
         return ''.join(out)
 
     def data(self):
-        return {'title': self.title, 'note': self.note, 'foot': self.foot,
+        return {'title': self.title, 'note': self.note, 'foot': esc(self.foot),
                 'lines': [{'n': str(l[0]), 't': esc(l[1]), 'd': esc(l[2]) if len(l) > 2 and l[2] else '', 'rb': bool(len(l) > 3 and l[3])} for l in self.lines],
                 'src': [self.src] if self.src else []}
 
@@ -278,3 +278,62 @@ def GL(key, term):
     q = Quote.__new__(Quote)
     q.key, q.text, q.page = key, s.text[i:i + e.end()].strip(), s.page_at(i)
     return q
+
+
+_ABBR = re.compile(r'(?:\b(?:e\.g|i\.e|No|Fig|vs|para|pp?|approx|Ch|Vol|Ed|St|Mr|Dr|U\.S)\.|\b[A-Z]\.)$')
+
+
+def _is_heading(seg):
+    """'(d) Final Attack Headings.' or 'e. TAC.': a run-in heading, not a sentence."""
+    body = re.sub(r'^(?:\(?[0-9a-z]{1,3}[.)]\s*|\d+-\d+\.\s*)+', '', seg).rstrip('.')
+    body = re.sub(r'\s+\(?[0-9a-z]{1,3}\)?$', '', body)       # trailing sub-paragraph letter: 'Overview a.'
+    words = body.split()
+    small = {'of', 'and', 'the', 'to', 'for', 'in', 'on', 'with', 'or', 'a', 'an', 'by'}
+    return 0 < len(words) <= 8 and all(re.match(r'[A-Z0-9(“"]', w) or w in small for w in words)
+
+
+def sentences(text):
+    """Split a paragraph into sentences; run-in headings and paragraph numbers stay with their sentence."""
+    out, cur = [], ''
+    parts = re.split(r'(?<=[.!?])(["”’)]?)\s+(?=[A-Z“"(\d])', text)
+    segs = [parts[0]] + [parts[i] + '\x00' + parts[i + 1] for i in range(1, len(parts) - 1, 2)]
+    for seg in segs:
+        q, _, body = seg.rpartition('\x00')
+        if q:
+            cur += q
+        if cur and (len(cur.split()) < 4 or _ABBR.search(cur) or _is_heading(cur)):
+            cur += ' ' + body
+            continue
+        if cur:
+            out.append(cur)
+        cur = body
+    if cur:
+        out.append(cur)
+    return out
+
+
+def S(key, start, k=1, after=None, nth=1):
+    """The first k sentences of the paragraph from `start`, word for word."""
+    s = quote.src(key)
+    text, page = s.quote(start, None, after, nth, 20000)
+    para = text.split('\n\n')[0]
+    sent = sentences(para)
+    q = Quote.__new__(Quote)
+    q.key, q.text, q.page = key, ' '.join(sent[:k]).strip(), page
+    return q
+
+
+def FIG(key, where, text, term=''):
+    """Text transcribed from a figure or table (layout text interleaves columns); every sentence is verified.
+    term: the figure's left-column label (e.g. the brevity word), shown before the text."""
+    KB('figure', [(term, text)], src=[key, where])
+    q = Quote.__new__(Quote)
+    q.key, q.text, q.page = key, (term + ' – ' if term else '') + text, where.split('p. ')[-1]
+    return q
+
+
+def assign_js(target, items):
+    """Data file that sets window.LP.<target> to a list."""
+    import json
+    body = ',\n   '.join(json.dumps(x, ensure_ascii=False) for x in items)
+    return '(function () {\n  window.LP.%s = [\n   %s\n  ];\n})();\n' % (target, body)

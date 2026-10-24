@@ -370,49 +370,82 @@
     return h;
   };
 
-  /* ---------- Rechentrainer ---------- */
+  /* ---------- Rechentrainer ----------
+     Jede Aufgabe zeigt mit der Lösung die zugrunde liegende Regel im Originalwortlaut (LP.calcRefs, erzeugt von
+     tools/build.py). ref: Schlüssel in LP.calcRefs, wenn er von der Aufgaben-ID abweicht. */
+  function mksCheck(target, tol) { return function (v) { var x = num(String(v).replace(/\s*(m|km|strich|mil|mils)$/i, '')); return !isNaN(x) && Math.abs(x - target) <= tol; }; }
   var CALC = [
     { id: 'line8', t: 'Line 8 vom Ziel aus', gen: function () {
       var d = LP.pick(DIRS), dist = LP.rand(3, 30) * 100;
       var ans = opposite(d);
       return { q: 'Das Ziel liegt <strong>' + de(dist) + ' m ' + DIR_DE[d] + '</strong> deiner Stellung. Du bist die nächste eigene Truppe. Wie lautet Line 8?',
         ph: 'z. B. Southwest 300', check: function (v) { var p = parseDirDist(v); return !!p && p.dir === ans && p.dist === dist; },
-        sol: '<span class="mono">' + DIR_EN[ans] + ' ' + dist + '</span> – Line 8 gibt die Richtung <em>vom Ziel</em> zu den eigenen Truppen an, also die Gegenrichtung.', src: [['jp3093', 'Kap. V, Abb. V-9']] };
+        sol: '<span class="mono">' + DIR_EN[ans] + ' ' + dist + '</span> – vom Ziel aus gesehen liegt deine Stellung ' + DIR_EN[ans].toLowerCase() + '.' };
     } },
     { id: 'reverse', t: 'Line 2: Kurs vom IP', gen: function () {
       var b = LP.rand(1, 360), ans = (b + 180) % 360 || 360;
       return { q: 'Das IP liegt vom Ziel aus in Richtung <strong>' + pad3(b) + '° magnetisch</strong>. Welches Heading gibst du in Line 2?',
         ph: 'dreistellig', check: function (v) { var x = num(v); return !isNaN(x) && angDiff(x, ans) === 0; },
-        sol: '<span class="mono">' + pad3(ans) + '</span> – Line 2 ist der magnetische Kurs vom IP zum Ziel: ' + pad3(b) + ' ± 180.', src: [['jp3093', 'Kap. V, Abb. V-9']] };
+        sol: '<span class="mono">' + pad3(ans) + '</span> = ' + pad3(b) + ' ± 180.' };
     } },
     { id: 'm2ft', t: 'Line 4: Meter in Fuß', gen: function () {
       var m = LP.rand(20, 1800), ans = Math.round(m * 3.28084);
       return { q: 'Zielhöhe laut Karte: <strong>' + de(m) + ' m MSL</strong>. Was sagst du in Line 4 (Fuß MSL)?',
         ph: 'Fuß', check: function (v) { var x = intNum(String(v).replace(/\s*(ft|feet)$/i, '')); return !isNaN(x) && Math.abs(x - ans) <= Math.max(5, ans * 0.01); },
-        sol: '<span class="mono">' + ans + ' feet</span> (' + de(m) + ' × 3,281). Faustformel: Meter × 3 plus 10 %. Line 4 ist Standard in Fuß MSL; ein anderes Bezugssystem (z. B. HAE) muss genannt werden.', src: [['jp3093', 'Kap. V, Abb. V-9']] };
+        sol: '<span class="mono">' + ans + ' feet</span> = ' + de(m) + ' × 3,281. Kopfrechnen: Meter × 3 plus 10 %.' };
     } },
     { id: 'km2nm', t: 'Line 3: km in NM', gen: function () {
       var km = LP.rand(80, 300) / 10, ans = round(km / 1.852, 1);
       return { q: 'Entfernung IP–Ziel: <strong>' + de(km, 1) + ' km</strong>. Was sagst du in Line 3 (Seemeilen, eine Nachkommastelle)?',
         ph: 'NM', check: function (v) { var x = num(v); return !isNaN(x) && Math.abs(x - ans) <= 0.15; },
-        sol: '<span class="mono">' + de(ans, 1) + '</span> NM (' + de(km, 1) + ' ÷ 1,852). Faustformel: km ÷ 2 plus 8 %. Für Hubschrauber (BP → Ziel) wird Line 3 in Metern gegeben.', src: [['jp3093', 'Kap. V, Abb. V-9']] };
+        sol: '<span class="mono">' + de(ans, 1) + '</span> NM = ' + de(km, 1) + ' ÷ 1,852. Kopfrechnen: km ÷ 2 plus 8 %.' };
     } },
     { id: 'deg2mil', t: 'Grad in Strich', gen: function () {
       var d = LP.rand(5, 355), ans = Math.round(d * 6400 / 360);
       return { q: 'Richtung <strong>' + d + '°</strong>. Wie viel Strich sind das (6400 Strich = Vollkreis)?',
         ph: 'Strich', check: function (v) { var x = intNum(v); return !isNaN(x) && Math.abs(x - ans) <= 6; },
-        sol: '<span class="mono">' + ans + '</span> Strich (' + d + ' × 17,78). Faustformel aus ATP 3-09.30: Grad × 17,8.', src: [['atp30930', 'Kap. 3, Abs. 3-20 bis 3-22']] };
+        sol: '<span class="mono">' + ans + '</span> Strich = ' + d + ' × 6400 ÷ 360 (≈ ' + d + ' × 17,8).' };
     } },
-    { id: 'worm', t: 'Mil-Formel (W = R × m)', gen: function () {
-      var kind = LP.rand(0, 2), R = LP.rand(5, 40) / 10, m = LP.rand(2, 40), W = round(R * m, 1);
-      if (kind === 0) return { q: 'Ein Objekt erscheint <strong>' + m + ' Strich</strong> breit, Entfernung <strong>' + de(R, 1) + ' km</strong>. Wie breit ist es in Metern?', ph: 'Meter',
-        check: function (v) { var x = num(v); return !isNaN(x) && Math.abs(x - W) <= Math.max(1, W * 0.05); }, sol: 'W = R × m = ' + de(R, 1) + ' × ' + m + ' = <span class="mono">' + de(W, 1) + ' m</span>.', src: [['atp30930', 'Kap. 3, Abs. 3-20 bis 3-22']] };
-      if (kind === 1) { var W2 = LP.rand(4, 20) * 5, R2 = LP.rand(10, 40) / 10, m2 = round(W2 / R2, 0);
-        return { q: 'Ein Gebäude ist bekannt <strong>' + W2 + ' m</strong> breit und <strong>' + de(R2, 1) + ' km</strong> entfernt. Wie viel Strich misst du im Fernglas?', ph: 'Strich',
-          check: function (v) { var x = num(v); return !isNaN(x) && Math.abs(x - W2 / R2) <= Math.max(1, W2 / R2 * 0.06); }, sol: 'm = W ÷ R = ' + W2 + ' ÷ ' + de(R2, 1) + ' ≈ <span class="mono">' + m2 + ' Strich</span>.', src: [['atp30930', 'Kap. 3, Abs. 3-20 bis 3-22']] }; }
-      var W3 = LP.rand(2, 16) * 5, m3 = LP.rand(5, 40), R3 = round(W3 / m3, 2);
-      return { q: 'Ein Fahrzeug von etwa <strong>' + W3 + ' m</strong> Länge erscheint <strong>' + m3 + ' Strich</strong> breit. Wie weit ist es entfernt (in km)?', ph: 'km',
-        check: function (v) { var x = num(v); return !isNaN(x) && Math.abs(x - R3) <= Math.max(0.05, R3 * 0.06); }, sol: 'R = W ÷ m = ' + W3 + ' ÷ ' + m3 + ' ≈ <span class="mono">' + de(R3, 2) + ' km</span> (' + de(R3 * 1000) + ' m).', src: [['atp30930', 'Kap. 3, Abs. 3-20 bis 3-22']] };
+    { id: 'mks', t: 'MKS: Meter = km × Strich', gen: function () {
+      var R = LP.rand(5, 40) / 10, m = LP.rand(2, 60), W = round(R * m, 1);
+      var obj = LP.pick(['zwei Fahrzeuge', 'zwei Gebäudeecken', 'die Enden einer Baumreihe', 'zwei Stellungen']);
+      return { q: 'Im Fernglas liegen ' + obj + ' <strong>' + m + ' Strich</strong> auseinander. Entfernung <strong>' + de(R, 1) + ' km</strong>. Wie viele Meter sind das?', ph: 'Meter',
+        check: mksCheck(W, Math.max(1, W * 0.05)), sol: 'Meter = km × Strich = ' + de(R, 1) + ' × ' + m + ' = <span class="mono">' + de(W, 1) + ' m</span>.' };
+    } },
+    { id: 'mks-km', t: 'MKS: km = Meter ÷ Strich', ref: 'mks', gen: function () {
+      var obj = LP.pick([['ein Kampfpanzer', 7], ['ein Lkw', 8], ['ein Schützenpanzer', 6], ['ein Pkw', 5], ['ein Container', 12]]);
+      var m = LP.rand(3, 20), R = round(obj[1] / m, 2);
+      return { q: obj[0].charAt(0).toUpperCase() + obj[0].slice(1) + ' (etwa <strong>' + obj[1] + ' m</strong> lang, Breitseite) erscheint <strong>' + m + ' Strich</strong> breit. Wie weit ist er entfernt (km)?', ph: 'km',
+        check: mksCheck(R, Math.max(0.05, R * 0.06)), sol: 'km = Meter ÷ Strich = ' + obj[1] + ' ÷ ' + m + ' ≈ <span class="mono">' + de(R, 2) + ' km</span> (' + de(R * 1000) + ' m).' };
+    } },
+    { id: 'mks-strich', t: 'MKS: Strich = Meter ÷ km', ref: 'mks', gen: function () {
+      var W = LP.rand(4, 30) * 5, R = LP.rand(10, 40) / 10, m = W / R;
+      return { q: 'Ein Gebäude ist bekannt <strong>' + W + ' m</strong> breit und <strong>' + de(R, 1) + ' km</strong> entfernt. Wie viel Strich misst du im Fernglas?', ph: 'Strich',
+        check: mksCheck(m, Math.max(1, m * 0.06)), sol: 'Strich = Meter ÷ km = ' + W + ' ÷ ' + de(R, 1) + ' ≈ <span class="mono">' + Math.round(m) + ' Strich</span>.' };
+    } },
+    { id: 'mks-shift', t: 'MKS: Seitenverschiebung vom Bezugspunkt', ref: 'mks', gen: function () {
+      var otm = LP.rand(10, 50) * 100;
+      if (otm % 1000 === 500) otm += 100;
+      var f = Math.round(otm / 1000), mils = LP.rand(10, 90), side = LP.pick(['LEFT', 'RIGHT']);
+      var W = Math.round(f * mils / 10) * 10;
+      return { q: 'Das neue Ziel liegt <strong>' + mils + ' Strich ' + (side === 'LEFT' ? 'links' : 'rechts') + '</strong> eines bekannten Punkts. Entfernung Beobachter–Ziel <strong>' + de(otm) + ' m</strong>. Welche Seitenverschiebung meldest du (auf 10 m)?',
+        ph: 'z. B. LEFT 120', check: function (v) {
+          var n = LP.norm(v).replace('RECHTS', 'RIGHT').replace('LINKS', 'LEFT');
+          var m = /^(RIGHT|LEFT)(\d+)M?$/.exec(n); return !!m && m[1] === side && parseInt(m[2], 10) === W; },
+        sol: 'OT-Faktor ' + f + ' × ' + mils + ' Strich = ' + (f * mils) + ' m, auf 10 m: <span class="mono">' + side + ' ' + W + '</span> (Verschiebung in Richtung des Ziels vom bekannten Punkt aus).' };
+    } },
+    { id: 'mks-hob', t: 'MKS: Sprenghöhe (HOB)', gen: function () {
+      var otm = LP.rand(10, 50) * 100;
+      if (otm % 1000 === 500) otm += 100;
+      var f = Math.round(otm / 1000), mils = LP.rand(2, 15), hob = f * mils, diff = 20 - hob;
+      var corr = Math.round(Math.abs(diff) / 5) * 5;
+      var ans = corr === 0 ? null : (diff > 0 ? 'UP' : 'DOWN') + ' ' + corr;
+      return { q: 'Zeitzünder: Der Sprengpunkt liegt <strong>AIR ' + mils + '</strong> (Strich über dem Einschießpunkt), Entfernung Beobachter–Ziel <strong>' + de(otm) + ' m</strong>. Gewünscht sind 20 m HOB. Welche Höhenkorrektur meldest du (auf 5 m)?',
+        ph: 'z. B. DOWN 15', check: function (v) {
+          var n = LP.norm(v).replace('HOCH', 'UP').replace('RUNTER', 'DOWN');
+          if (!ans) return /^(KEINE|KEINEKORREKTUR|NONE|0|UP0|DOWN0)$/.test(n);
+          var m = /^(UP|DOWN)(\d+)M?$/.exec(n); return !!m && (m[1] + ' ' + parseInt(m[2], 10)) === ans; },
+        sol: 'HOB = ' + mils + ' Strich × OT-Faktor ' + f + ' = ' + hob + ' m. Bis 20 m fehlen ' + diff + ' m, auf 5 m gerundet: <span class="mono">' + (ans || 'keine Korrektur') + '</span>.' };
     } },
     { id: 'ot', t: 'Seitenkorrektur mit OT-Faktor', gen: function () {
       var otm = LP.rand(5, 50) * 100;
@@ -425,70 +458,69 @@
         ph: 'z. B. RIGHT 60', check: function (v) {
           var n = LP.norm(v).replace('RECHTS', 'RIGHT').replace('LINKS', 'LEFT');
           var m = /^(RIGHT|LEFT)(\d+)M?$/.exec(n); return !!m && m[1] === dir && parseInt(m[2], 10) === corr; },
-        sol: 'OT-Faktor ' + de(f, f < 1 ? 1 : 0) + ' × ' + mils + ' Strich = ' + de(mils * f, 1) + ' m, auf 10 m gerundet: <span class="mono">' + dir + ' ' + corr + '</span>. Die Korrektur ist der Beobachtung entgegengesetzt' + (corr < 30 ? '; unter 30 m ist es eine kleine Korrektur, die man normalerweise nicht übermittelt.' : '.'), src: [['atp30930', 'Kap. 5, Abs. 5-13 bis 5-16']] };
+        sol: 'OT-Faktor ' + de(f, f < 1 ? 1 : 0) + ' × ' + mils + ' Strich = ' + de(mils * f, 1) + ' m, auf 10 m gerundet: <span class="mono">' + dir + ' ' + corr + '</span>' + (corr < 30 ? ' (unter 30 m: minor deviation correction).' : '.') };
     } },
     { id: 'laser', t: 'Laser-Geometrie', choice: true, gen: function () {
       var ltl = LP.rand(1, 360), off = LP.pick([LP.rand(0, 9), LP.rand(11, 44), LP.rand(46, 59), LP.rand(61, 120)]);
       var fah = (ltl + (Math.random() < 0.5 ? off : -off) + 360) % 360 || 360;
       var d = angDiff(fah, ltl);
-      var opts = ['Sicherheitszone – nicht freigeben', 'bevorzugter Bereich (10–45°)', 'zulässig (45–60°)', 'außerhalb der Angriffszone'];
+      var opts = ['safety zone (±10°)', 'preferred (±45°)', 'optimal attack zone (±60°)', 'outside the optimal attack zone'];
       var a = d < 10 ? 0 : d <= 45 ? 1 : d <= 60 ? 2 : 3;
       return { q: 'Laser Target Line <strong>' + pad3(ltl) + '</strong>, geplante Final Attack Heading <strong>' + pad3(fah) + '</strong>. Wo liegt der Anflug?', opts: opts, a: a,
-        sol: 'Abweichung |FAH − LTL| = ' + d + '°. Sicherheitszone: 20°-Keil (±10°) um die Linie Ziel–Beleuchter; Angriffszone: 120° (±60°), bevorzugt ±45°.', src: [['jp3093', 'Kap. III, Abb. III-9']] };
+        sol: 'Abweichung |FAH − LTL| = ' + d + '°.' };
     } },
     { id: 'keyhole', t: 'Keyhole', choice: true, gen: function () {
-      var pts = [['A', 'nördlich'], ['B', 'östlich'], ['C', 'südlich'], ['D', 'westlich'], ['E', 'über dem Ziel (Echo-Punkt)']];
+      var pts = [['A', 'North'], ['B', 'East'], ['C', 'South'], ['D', 'West'], ['E', 'Overhead Target']];
       var p = LP.pick(pts), nm = LP.rand(5, 15);
+      var word = { A: 'Alpha', B: 'Bravo', C: 'Charlie', D: 'Delta', E: 'Echo' };
+      var figure = 'Figure III-18: A – North · B – East · C – South · D – West · E – Overhead Target.';
       if (Math.random() < 0.5) {
-        var opts = pts.map(function (x) { return x[0] === 'E' ? 'Echo – über dem Ziel' : ({ A: 'Alpha', B: 'Bravo', C: 'Charlie', D: 'Delta' })[x[0]] + ' ' + nm; });
-        return { q: 'Du willst die Jets ' + (p[0] === 'E' ? 'direkt über dem Ziel' : nm + ' NM ' + p[1] + ' des Ziels') + ' halten lassen. Welcher Keyhole-Punkt?', opts: opts, a: pts.indexOf(p),
-          sol: 'A = Nord, B = Ost, C = Süd, D = West, E = Echo (meist das Ziel). Die Zahl ist die Entfernung in NM vom Echo-Punkt.', src: [['jp3093', 'Kap. III, Abb. III-18']] };
+        var opts = pts.map(function (x) { return x[0] === 'E' ? 'Echo' : word[x[0]] + ' ' + nm; });
+        return { q: 'Du willst die Jets ' + (p[0] === 'E' ? 'direkt über dem Ziel' : nm + ' NM ' + ({ North: 'nördlich', East: 'östlich', South: 'südlich', West: 'westlich' })[p[1]] + ' des Ziels') + ' halten lassen. Welcher Keyhole-Punkt?', opts: opts, a: pts.indexOf(p), sol: figure };
       }
-      var opts2 = pts.map(function (x) { return x[0] === 'E' ? 'über dem Ziel' : nm + ' NM ' + x[1]; });
-      var name = p[0] === 'E' ? 'Echo' : ({ A: 'Alpha', B: 'Bravo', C: 'Charlie', D: 'Delta' })[p[0]] + ' ' + nm;
-      return { q: 'Der JTAC weist an: „Hold <strong>' + name + '</strong>“. Wo hält das Luftfahrzeug?', opts: opts2, a: pts.indexOf(p),
-        sol: 'A = Nord, B = Ost, C = Süd, D = West, E = Echo (meist das Ziel).', src: [['jp3093', 'Kap. III, Abb. III-18']] };
+      var opts2 = pts.map(function (x) { return x[0] === 'E' ? 'Overhead Target' : x[1] + ', ' + nm + ' NM'; });
+      return { q: 'Der JTAC weist an: „proceed to <strong>' + (p[0] === 'E' ? 'Echo' : word[p[0]] + ' ' + nm) + '</strong>“. Wo hält das Luftfahrzeug?', opts: opts2, a: pts.indexOf(p), sol: figure };
     } },
     { id: 'tle', t: 'TLE-Kategorie', choice: true, gen: function () {
       var cats = [[0, 6], [7, 15], [16, 30], [31, 91], [92, 305], [306, 600]];
       var k = LP.rand(0, 5), m = LP.rand(cats[k][0], cats[k][1]);
       return { q: 'Geschätzter Zielortungsfehler (CE90): <strong>' + m + ' m</strong>. Welche TLE-Kategorie?', opts: ['CAT I', 'CAT II', 'CAT III', 'CAT IV', 'CAT V', 'CAT VI'], a: k,
-        sol: 'CAT I 0–6 m · II 7–15 m · III 16–30 m · IV 31–91 m · V 92–305 m · VI über 305 m.', src: [['jp3093', 'Kap. III, Abb. III-5']] };
+        sol: 'Figure III-5: CAT I 0-6 m · CAT II 7-15 m · CAT III 16-30 m · CAT IV 31-91 m · CAT V 92-305 m · CAT VI (>305m).' };
     } },
     { id: 'mgrs', t: 'Stellenzahl und Präzision', choice: true, gen: function () {
       var k = LP.rand(0, 2);
       var digits = [6, 8, 10][k];
       var ex = { 6: 'NB 452 883', 8: 'NB 4521 8834', 10: 'NB 45213 88347' }[digits];
       return { q: 'Eine MGRS-Koordinate mit <strong>' + digits + ' Ziffern</strong> (z. B. <span class="mono">' + ex + '</span>) beschreibt einen Punkt mit welcher Auflösung?', opts: ['100 m', '10 m', '1 m'], a: k,
-        sol: '6 Ziffern = 100 m, 8 Ziffern = 10 m, 10 Ziffern = 1 m. Wichtig: Die Stellenzahl beschreibt die Präzision, nicht die Genauigkeit – entscheidend ist der TLE.', src: [['jp3093', 'Kap. V, CAS Brief, Line 6']] };
+        sol: '6 Ziffern = 100 m, 8 Ziffern = 10 m, 10 Ziffern = 1 m.' };
     } },
     { id: 'dc', t: 'Danger Close (Steilfeuer)', choice: true, gen: function () {
-      var sys = LP.pick([['Mörser', 600], ['Rohrartillerie', 600], ['5-Zoll-Schiffsgeschütz', 750]]);
+      var sys = LP.pick([['Mörser', 600], ['Rohrartillerie', 600], ['5-inch naval gun', 750]]);
       var d = LP.pick([LP.rand(2, 5) * 100, LP.rand(7, 12) * 100, sys[1] === 750 ? 650 : 550, sys[1] === 750 ? 800 : 650]);
       if (d === sys[1]) d += 50;
       var dc = d < sys[1];
-      return { q: sys[0] + ': Ziel <strong>' + de(d) + ' m</strong> von eigenen Truppen entfernt. Ist der CFF „Danger Close“?', opts: ['ja, DANGER CLOSE ansagen', 'nein'], a: dc ? 0 : 1,
-        sol: 'Danger Close nach ATP 3-09.30: innerhalb 600 m bei Mörsern und Artillerie, innerhalb 750 m bei 5-Zoll-Schiffsgeschützen. Für CAS gelten stattdessen die Risk-Estimate Distances der JFIRE – die stehen nur in deinem Print.', src: [['atp30930', 'Kap. 4, Abs. 4-34']] };
+      return { q: sys[0] + ': Ziel <strong>' + de(d) + ' m</strong> von eigenen Truppen entfernt. Ist der Call for Fire „Danger Close“?', opts: ['ja – DANGER CLOSE', 'nein'], a: dc ? 0 : 1,
+        sol: de(d) + ' m ' + (dc ? '<' : '>') + ' ' + sys[1] + ' m. Für CAS gelten stattdessen die Risk-Estimate Distances aus der JFIRE (nur in deinem Print).' };
     } },
     { id: 'sead', t: 'SEAD-Zeiten (Faustformel)', gen: function () {
       var rw = Math.random() < 0.3;
       if (rw) {
         var km = LP.rand(2, 8), s = Math.round(km / 4 * 60);
-        return { q: 'Hubschrauber (Faustformel 4 km/min) muss <strong>' + km + ' km</strong> im Wirkbereich einer Bedrohung zurücklegen. Wie viele Sekunden dauert das?', ph: 'Sekunden',
-          check: function (v) { var x = num(v); return !isNaN(x) && Math.abs(x - s) <= 5; }, sol: km + ' ÷ 4 × 60 = <span class="mono">' + s + ' s</span>.', src: [['jp3093', 'Kap. V, Abb. V-2']] };
+        return { q: 'Hubschrauber (RW CAS 4km/min) muss <strong>' + km + ' km</strong> im Wirkbereich einer Bedrohung zurücklegen. Wie viele Sekunden dauert das?', ph: 'Sekunden',
+          check: function (v) { var x = num(v); return !isNaN(x) && Math.abs(x - s) <= 5; }, sol: km + ' ÷ 4 × 60 = <span class="mono">' + s + ' s</span>.' };
       }
       var a10 = Math.random() < 0.3, sp = a10 ? 5 : 8, nm = LP.rand(3, 8), sec = Math.round(nm / sp * 60);
-      return { q: (a10 ? 'A-10 (5 NM/min)' : 'Jet (8 NM/min)') + ', Bedrohung mit <strong>' + nm + ' NM</strong> maximaler Wirkreichweite am Ziel. Wie viele Sekunden vor TOT tritt das Luftfahrzeug in die Reichweite ein?', ph: 'Sekunden',
+      return { q: (a10 ? 'A-10 (5nm/min)' : 'FW CAS (8nm/min)') + ', Bedrohung mit <strong>' + nm + ' NM</strong> maximaler Wirkreichweite am Ziel. Wie viele Sekunden vor TOT tritt das Luftfahrzeug in die Reichweite ein?', ph: 'Sekunden',
         check: function (v) { var x = num(v); return !isNaN(x) && Math.abs(x - sec) <= 5; },
-        sol: nm + ' ÷ ' + sp + ' × 60 ≈ <span class="mono">' + sec + ' s</span>. Die SEAD-Dauer reicht vom Eintritt des ersten bis zum Austritt des letzten Luftfahrzeugs aus der Reichweite – JP 3-09.3 rundet im Beispiel großzügig auf volle Minuten (−1+00 bis +2+00).', src: [['jp3093', 'Kap. V, Abb. V-2']] };
+        sol: nm + ' ÷ ' + sp + ' × 60 ≈ <span class="mono">' + sec + ' s</span>.' };
     } },
     { id: 'fah', t: 'FAH aus Himmelsrichtung', gen: function () {
       var from = LP.pick(DIRS), hdg = (DIRS.indexOf(opposite(from)) * 45);
       var lo = (hdg - 45 + 360) % 360, hi = (hdg + 45) % 360;
       var fromDe = { N: 'Norden', NE: 'Nordosten', E: 'Osten', SE: 'Südosten', S: 'Süden', SW: 'Südwesten', W: 'Westen', NW: 'Nordwesten' }[from];
-      return { q: 'Die Einschränkung lautet „Attack from the <strong>' + DIR_EN[from].toLowerCase() + '</strong>“ (Angriff aus ' + fromDe + '). Welcher Bereich von Final Attack Headings ist damit gemeint?', ph: 'z. B. 135-225',
+      return { q: 'Die Einschränkung lautet „attack from the <strong>' + DIR_EN[from].toLowerCase() + '</strong>“ (Angriff aus ' + fromDe + '). Welcher Bereich von Final Attack Headings ist damit gemeint?', ph: 'z. B. 135-225',
         check: function (v) { var m = String(v).match(/\d+/g); if (!m || m.length < 2) return false; return angDiff(parseInt(m[0], 10), lo) === 0 && angDiff(parseInt(m[1], 10), hi) === 0; },
-        sol: '<span class="mono">' + pad3(lo) + '–' + pad3(hi) + '</span>. Eine Himmelsrichtung als Einschränkung bedeutet ±45° um den Kurs. Beispiel aus JP 3-09.3: „from the north“ (Nord → Süd) = 135–225.', src: [['jp3093', 'Kap. V, Develop Attack Geometry']] };
+        sol: '<span class="mono">' + pad3(lo) + '–' + pad3(hi) + '</span> = ' + pad3(hdg) + ' ± 45.' };
     } }
   ];
   var rc = { sel: 'mix', task: null, val: '', picked: null, checked: false, right: 0, total: 0 };
@@ -496,6 +528,7 @@
     var g = rc.sel === 'mix' ? LP.pick(CALC) : CALC.filter(function (c) { return c.id === rc.sel; })[0];
     rc.task = g.gen();
     rc.task.gid = g.id;
+    rc.task.ref = g.ref || g.id;
     rc.task.choice = !!g.choice;
     rc.val = ''; rc.picked = null; rc.checked = false;
   }
@@ -519,7 +552,9 @@
     }
     if (rc.checked) {
       var ok = t.choice ? rc.picked === t.a : t.check(rc.val);
-      h += '<div class="feedback ' + (ok ? 'ok' : 'bad') + '"><span class="ft">' + (ok ? 'Richtig' : 'Nicht richtig') + '</span><div>' + t.sol + '</div>' + LP.srcChips(t.src) + '</div>' +
+      var ref = (LP.calcRefs || {})[t.ref];
+      h += '<div class="feedback ' + (ok ? 'ok' : 'bad') + '"><span class="ft">' + (ok ? 'Richtig' : 'Nicht richtig') + '</span><div>' + t.sol + '</div>' +
+        (ref ? '<div class="small">' + ref.q + '</div>' + LP.srcChips(ref.src) : '') + '</div>' +
         '<div class="row"><button class="btn accent" type="button" data-act="rc-next">Nächste Aufgabe</button></div>';
     }
     h += '</div>';
@@ -532,7 +567,7 @@
   V.funk = function () {
     var list = LP.scripts;
     var s = list[fk.idx];
-    var h = '<div class="view narrow">' + head('Üben', 'Funkbeispiele', 'Vollständige Abläufe nach den Beispielen in JP 3-09.3 Anhang E, gekürzt und kommentiert. Schalte „JTAC verdecken“ ein, sprich die Funksprüche laut und decke sie dann auf.');
+    var h = '<div class="view narrow">' + head('Üben', 'Funkbeispiele', 'Die neun Beispiele aus JP 3-09.3 Anhang E vollständig im Originalwortlaut, mit den Erläuterungen der Vorschrift zwischen den Funksprüchen. Schalte „JTAC verdecken“ ein, sprich die Funksprüche des Controllers laut und decke sie dann auf.');
     h += '<div class="row"><div class="field" style="min-width:min(100%,360px)"><label for="fk-pick">Beispiel</label><select id="fk-pick">' + list.map(function (x, i) {
       return '<option value="' + i + '"' + (i === fk.idx ? ' selected' : '') + '>' + esc(x.title) + '</option>';
     }).join('') + '</select></div><span class="spacer"></span><label class="check"><input type="checkbox" id="fk-hide"' + (fk.hide ? ' checked' : '') + '><span>JTAC verdecken</span></label></div>';
