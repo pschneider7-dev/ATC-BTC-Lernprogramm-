@@ -73,3 +73,5 @@ if __name__ == '__main__':
             continue
         text = mod.build()
         write('data/%s.js' % extra, text)
+    import pwa
+    pwa.write()

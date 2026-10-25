@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#1b272c"/>
+  <g stroke="#2c3b43" stroke-width="2">
+    <path d="M0 128H512M0 256H512M0 384H512M128 0V512M256 0V512M384 0V512"/>
+  </g>
+  <g fill="none" stroke="#e8662a" stroke-linecap="round">
+    <circle cx="256" cy="214" r="118" stroke-width="22"/>
+    <path d="M256 74V166M256 262V354M116 214H208M304 214H396" stroke-width="22"/>
+  </g>
+  <circle cx="256" cy="214" r="13" fill="#e8662a"/>
+  <text x="256" y="452" text-anchor="middle" font-family="'Barlow Condensed', 'Arial Narrow', sans-serif" font-weight="700" font-size="104" letter-spacing="10" fill="#edf0ee">JTAC</text>
+</svg>

@@ -244,6 +244,15 @@ body::before {
   padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
 .main:focus { outline: none; }
+/* Als App vom Home-Bildschirm gestartet: Inhalt unter der Statusleiste beginnen lassen, Home-Indikator frei halten */
+@media (display-mode: standalone) {
+  body { padding-top: env(safe-area-inset-top, 0px); }
+  .main { padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px)); }
+}
+html.standalone body { padding-top: env(safe-area-inset-top, 0px); }
+html.standalone .main { padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px)); }
+.install-steps { margin: 0.3rem 0 0; padding-left: 1.3rem; display: grid; gap: 0.25rem; }
+.install-steps .ico { display: inline-block; font-family: var(--f-mono); border: 1px solid var(--rule); border-radius: 4px; padding: 0 0.3rem; background: var(--card); }
 /* Einspaltige Grids: Spalte darf schrumpfen, damit breite Tabellen im eigenen Scrollbereich bleiben */
 .view, .stack, .stack-lg, .page-head, .module-head, .prose, .prose ul, .prose ol, .radio, .flash-wrap, .flash .fb, .flash .a,
 .field, .options, .feedback, .nl-grid, .scenario, .seq-pool, .seq-built, .week, .task-list, .kb-line .kb-b, .section { grid-template-columns: minmax(0, 1fr); }

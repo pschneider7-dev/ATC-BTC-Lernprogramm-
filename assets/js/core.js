@@ -103,8 +103,17 @@
     return LP.modules.slice().sort(function (a, b) { return a.nr - b.nr; });
   };
 
+  // App-Modus: vom Home-Bildschirm gestartet (iPhone: navigator.standalone) und Offline-Speicher bereit?
+  LP.app = {
+    standalone: !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true,
+    ios: /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1),
+    offline: false,   // Service Worker aktiv: alle Inhalte liegen auf dem Gerät
+    prompt: null      // Chrome/Android: zurückgehaltenes beforeinstallprompt-Ereignis
+  };
+  if (LP.app.standalone) document.documentElement.classList.add('standalone');
+
   var toastTimer = null;
-  LP.toast = function (msg) {
+  LP.toast = function (msg, ms) {
     var el = document.querySelector('.toast');
     if (!el) {
       el = document.createElement('div');
@@ -115,7 +124,7 @@
     el.textContent = msg;
     el.hidden = false;
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { el.hidden = true; }, 2400);
+    toastTimer = setTimeout(function () { el.hidden = true; }, ms || 2400);
   };
 
   LP.copyText = function (text, fallbackEl) {

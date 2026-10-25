@@ -114,4 +114,32 @@
 
   LP.applyTheme();
   LP.render();
+
+  /* ---------- App: Offline-Speicher (Service Worker) und Installation ----------
+     Nur über https (bzw. localhost). In eingebetteten Vorschauen schlägt die Registrierung fehl;
+     dann läuft alles wie bisher, nur ohne Offline-Speicher und ohne Installationshinweis. */
+  var local = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || local)) {
+    var hadController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.register('sw.js').then(function () {
+      return navigator.serviceWorker.ready;
+    }).then(function () {
+      LP.app.offline = true;
+      V.refreshAppPanel();
+    }).catch(function () { /* ohne Offline-Speicher weiter */ });
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (hadController) LP.toast('Neue Version geladen – sie gilt ab dem nächsten Start.', 5000);
+      hadController = true;
+    });
+  }
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    LP.app.prompt = e;
+    V.refreshAppPanel();
+  });
+  window.addEventListener('appinstalled', function () {
+    LP.app.prompt = null;
+    V.refreshAppPanel();
+    LP.toast('App installiert');
+  });
 })();

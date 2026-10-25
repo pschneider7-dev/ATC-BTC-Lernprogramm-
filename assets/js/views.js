@@ -81,7 +81,7 @@
     var atp = atpTotals();
     var due = dueCount();
 
-    var h = '<div class="view">';
+    var h = '<div class="view">' + V.appPanel('start');
     h += '<section class="hero"><div class="stack-lg">' +
       '<div class="eyebrow">Vorbereitung JTAC Basic und Advanced Training Course</div>' +
       '<h1>Close Air Support <span>lernen</span>, bevor der Lehrgang beginnt.</h1>' +
@@ -106,7 +106,7 @@
       tile('neunline', '9-Line-Trainer', 'Szenario lesen, Brief aufbauen, Einheiten umrechnen, Readback-Pflichten prüfen.') +
       tile('kontrolle', 'Kontrollart und Methode', 'Lagen beurteilen: Type 1, 2 oder 3? BOT oder BOC?') +
       tile('reihenfolge', 'Reihenfolgen', 'Execution Template, Check-in, 9-Line, CFF, BDA, Laser-Handoff in die richtige Ordnung bringen.') +
-      tile('rechnen', 'Rechentrainer', 'Line 8, Fuß, Seemeilen, Strich, Mil-Formel, Laser-Geometrie, SEAD-Zeiten.') +
+      tile('rechnen', 'Rechentrainer', 'Line 8, Fuß, Seemeilen, Strich, MKS-Formel, OT-Faktor, Laser-Geometrie, SEAD-Zeiten.') +
       tile('brevitytrainer', 'Brevity-Trainer', 'Begriff ↔ Bedeutung, mit NATO-Kennzeichnung.') +
       tile('funk', 'Funkbeispiele', 'Komplette Funksprüche aus JP 3-09.3 – JTAC-Funksprüche verdecken und selbst sprechen.') +
       '</div></section>';
@@ -449,7 +449,8 @@
   V.daten = function () {
     var json = JSON.stringify(LP.state);
     var h = '<div class="view narrow"><div class="page-head"><div class="eyebrow">Planen</div><h1>Fortschritt &amp; Daten</h1>' +
-      '<p class="lead">Dein Fortschritt wird nur in diesem Browser gespeichert. Mit dem Code unten überträgst du ihn auf ein anderes Gerät.</p></div>' +
+      '<p class="lead">Dein Fortschritt wird nur in diesem Browser bzw. in der installierten App gespeichert. Mit dem Code unten überträgst du ihn auf ein anderes Gerät oder vom Browser in die App.</p></div>' +
+      V.appPanel('daten') +
       '<section class="panel stack"><h3>Darstellung</h3><div class="row">' +
       ['auto', 'light', 'dark'].map(function (t) {
         return '<label class="check"><input type="radio" name="theme" id="theme-' + t + '" value="' + t + '"' + (LP.state.theme === t ? ' checked' : '') + '><span>' + ({ auto: 'wie System', light: 'hell', dark: 'dunkel' })[t] + '</span></label>';
@@ -461,6 +462,35 @@
       '<section class="panel stack"><h3>Zurücksetzen</h3><p class="small muted">Löscht gelesene Abschnitte, Kartenfächer, Quizergebnisse, Lernplan und Abgleich-Häkchen in diesem Browser.</p>' +
       '<div class="row" id="reset-area"><button class="btn ghost" type="button" data-act="reset-ask">Alles zurücksetzen …</button></div></section></div>';
     return h;
+  };
+
+  /* ---------- App installieren ---------- */
+  function appHintOff() { try { return window.localStorage.getItem('jtacLP.appHint') === 'off'; } catch (e) { return false; } }
+  V.appPanel = function (ctx) {
+    var A = LP.app || {};
+    var wrap = function (inner) { return '<div id="app-panel" data-ctx="' + ctx + '">' + inner + '</div>'; };
+    if (A.standalone) {
+      return wrap(ctx === 'daten' ? '<section class="panel stack"><h3>App</h3><p class="small">Läuft als App vom Home-Bildschirm' +
+        (A.offline ? ' – alle Inhalte liegen auf dem Gerät und funktionieren offline.' : '.') + '</p></section>' : '');
+    }
+    // nur anbieten, wo Installation wirklich geht (nicht in Vorschauen oder als lokale Datei)
+    if (!A.offline && !A.prompt) return wrap('');
+    if (ctx === 'start' && appHintOff()) return wrap('');
+    var how;
+    if (A.prompt) how = '<div class="row"><button class="btn accent" type="button" data-act="app-install">App installieren</button></div>';
+    else if (A.ios) how = '<ol class="install-steps small"><li>In <strong>Safari</strong> auf <span class="ico">Teilen</span> tippen (Quadrat mit Pfeil nach oben).</li>' +
+      '<li><strong>Zum Home-Bildschirm</strong> wählen (falls nicht sichtbar: in der Liste nach unten scrollen).</li>' +
+      '<li><strong>Hinzufügen</strong> tippen und die App danach über das JTAC-Symbol öffnen.</li></ol>';
+    else how = '<p class="small">Im Browsermenü <strong>App installieren</strong> bzw. <strong>Zum Startbildschirm hinzufügen</strong> wählen.</p>';
+    return wrap('<section class="notice stack"><strong>Als App installieren</strong>' +
+      '<p class="small">Mit eigenem Symbol auf dem Home-Bildschirm, im Vollbild und komplett offline.</p>' + how +
+      '<p class="small muted">Browser und App speichern den Fortschritt getrennt. Zum Übertragen den Code unter <a href="#daten">Fortschritt &amp; Daten</a> kopieren und in der App laden.</p>' +
+      (ctx === 'start' ? '<div class="row"><button class="btn ghost small" type="button" data-act="app-hint-close">Hinweis ausblenden</button></div>' : '') +
+      '</section>');
+  };
+  V.refreshAppPanel = function () {
+    var el = document.getElementById('app-panel');
+    if (el) el.outerHTML = V.appPanel(el.getAttribute('data-ctx'));
   };
 
   V.notFound = function () {
@@ -485,6 +515,16 @@
     }
     var act = t.getAttribute('data-act');
     switch (act) {
+      case 'app-install':
+        if (LP.app.prompt) {
+          LP.app.prompt.prompt();
+          LP.app.prompt.userChoice.then(function () { LP.app.prompt = null; V.refreshAppPanel(); }, function () {});
+        }
+        return true;
+      case 'app-hint-close':
+        try { window.localStorage.setItem('jtacLP.appHint', 'off'); } catch (err) { /* ohne Speicher bleibt der Hinweis */ }
+        document.getElementById('app-panel').innerHTML = '';
+        return true;
       case 'card-show': cardSession.shown = true; LP.render(true); return true;
       case 'card-right': answerCard(true); LP.render(true); return true;
       case 'card-wrong': answerCard(false); LP.render(true); return true;
