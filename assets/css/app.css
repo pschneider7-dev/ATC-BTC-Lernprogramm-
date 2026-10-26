@@ -793,3 +793,9 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); outline
   .main { padding: 0; }
   .kneeboard { break-inside: avoid; }
 }
+
+details.mnemo { max-width: 42rem; }
+details.mnemo summary { cursor: pointer; font-weight: 600; font-size: 0.9rem; color: var(--ok); padding: 0.2rem 0; }
+details.mnemo[open] summary { margin-bottom: 0.4rem; }
+.mn-word { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+.mn-word span { font: 700 1.15rem var(--f-mono); min-width: 1.7rem; text-align: center; padding: 0.15rem 0.3rem; border-radius: 6px; background: var(--card); border: 1px solid var(--rule); }

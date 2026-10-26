@@ -75,7 +75,7 @@
     var t = [
       ['neunline', '9-Line-Trainer', 'Rohdaten aus der Lage in einen korrekten CAS-Brief umsetzen: Kurs umkehren, km in NM, m in ft, Line 8 vom Ziel aus.', 'neunline'],
       ['kontrolle', 'Kontrollart und Angriffsmethode', 'Lagen beurteilen: Type 1, 2 oder 3? Bomb on Target oder Bomb on Coordinate?', 'kontrolle'],
-      ['reihenfolge', 'Reihenfolgen', 'Execution Template, Check-in, 9-Line, CFF, SALTR, 5-Line, FIDO, Laser-Handoff, JFO-Brief in die richtige Ordnung bringen.', 'reihenfolge'],
+      ['reihenfolge', 'Reihenfolgen', 'Execution Template, Check-in, Situation Update, 9-Line, CFF, SALTR, 5-Line, FIDO, Laser-Handoff, JFO-Brief in die richtige Ordnung bringen.', 'reihenfolge'],
       ['rechnen', 'Rechentrainer', 'Zufallsaufgaben zu Line 8, Fuß, Seemeilen, Strich, Mil-Formel, OT-Faktor, Laser-Geometrie, Keyhole, TLE, Danger Close und SEAD-Zeiten.', 'rechnen'],
       ['brevitytrainer', 'Brevity-Trainer', 'Begriff zur Bedeutung und umgekehrt – mit NATO-Kennzeichnung.', 'brevity'],
       ['funk', 'Funkbeispiele', 'Komplette Funksprüche aus JP 3-09.3. JTAC-Funksprüche verdecken und selbst sprechen.', null]
@@ -309,6 +309,10 @@
       return '<option value="' + i + '"' + (i === sq.idx ? ' selected' : '') + '>' + esc(x.title) + (st && st.ok ? ' ✓' : '') + '</option>';
     }).join('') + '</select></div>';
     if (s.intro) h += '<p class="small muted">' + s.intro + '</p>';
+    if (s.mn) h += '<details class="mnemo"><summary>Merkwort anzeigen</summary><div class="callout tip"><div class="ct">Merkwort</div>' +
+      '<div class="mn-word">' + s.mn.w.split('').map(function (c) { return '<span>' + esc(c) + '</span>'; }).join('') + '</div>' +
+      (s.mn.q ? '<div class="small">' + s.mn.q + '</div>' : '') + (s.mn.hint ? '<p class="small">' + esc(s.mn.hint) + '</p>' : '') +
+      LP.srcChips(s.mn.src) + '</div></details>';
     h += '<div class="two-col"><div class="stack"><h4>Deine Reihenfolge</h4><div class="seq-built">' +
       (sq.built.length ? sq.built.map(function (k, pos) {
         var cls = sq.checked ? (s.items[k] === s.items[pos] ? ' ok' : ' bad') : '';

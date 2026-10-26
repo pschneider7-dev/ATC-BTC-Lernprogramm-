@@ -1,5 +1,7 @@
 """Sequence drill: put the elements of a format or procedure in order. Every element is word for word from the
-publication (checked against the source text); title and intro are ours, the note quotes the publication."""
+publication (checked against the source text); title and intro are ours, the note quotes the publication.
+MN gives the mnemonic of a sequence: the official ones with the sentence of JP 3-09.3 that names them, TEFACHR
+(course mnemonic) with the figure whose line titles it follows."""
 import quote
 from lib import Q, S, assign_js
 import m05, m06, m11, m12, m13, spick
@@ -9,6 +11,9 @@ SEQ = [
      [l[1] for l in m05.TEMPLATE.lines], S('jp3093', 'b. CAS Execution Template. By its very nature, the execution of CAS differs', 2), 'jp3093'),
     ('checkin', 'Check-in Briefing', 'Die Reihenfolge, in der das Luftfahrzeug eincheckt.',
      [l[1].split(':')[0] for l in m05.CHECK_IN.lines], S('jp3093', '(2) CAS Aircraft Check-In. Aircraft check-in procedures are essential', 1), 'jp3093'),
+    ('sitrep', 'Situation Update (TEFACHR)', 'Die Zeilen des Situation Update nach Figure V-6.',
+     ['Threat', 'Enemy Situation', 'Friendly', 'Artillery', 'Clearance Authority', 'Hazards', 'Remarks and Restrictions'],
+     S('jp3093', '(3) Situation Update (a) The situation update brief is a tool', 4), 'jp3093'),
     ('nineline', 'CAS Brief (9-Line)', 'Die neun Lines in der richtigen Reihenfolge.',
      [l[1] for l in m06.NINE_LINE.lines if l[0] in '123456789' and l[0]], S('jp3093', '(7) Readbacks (a) Required readbacks of lines 4, 6, and restrictions.', 1), 'jp3093'),
     ('remarks', 'Reihenfolge der Remarks', 'Die empfohlene Reihenfolge der Remarks im CAS Brief.',
@@ -66,13 +71,41 @@ SEQ = [
      [l[1] for l in m13.INFLTREP.lines if l[0]], S('jp3093', '(f) Aircrew Responsibilities. Use the abbreviated USMTF INFLTREP', 1), 'jp3093'),
 ]
 
+# Figure V-6 is a table: its line titles are checked word for word inside the figure.
+FIG_V6 = ('Situation Update Example 2', 'Figure V-6. Situation Update Example 2')
+
+MN = {
+    'checkin': ('MNPOPCA', S('jp3093', '(e) MNPOPCA―The mnemonic', 1), None),
+    'sitrep': ('TEFACHR', None, 'Merkwort aus dem Lehrgang, in JP 3-09.3 nicht genannt. Die Buchstaben folgen den Zeilen von '
+               'Figure V-6 (Situation Update Example 2). Figure V-5 (Example 1) hat statt Enemy Situation und Hazards die Zeilen '
+               'Targets und Ordnance. Nur die Zeilen übermitteln, die zur Lage passen.'),
+    'fido': ('FIDO', S('jp3093', 'i. Talk-on descriptions and directions should be simple and short', 2), None),
+    'saltr': ('SALTR', S('jp3093', '2. The JTAC/FAC(A) should provide a “SALTR', 1), None),
+}
+
+
+def _norm(t):
+    return t.replace('’', "'").replace('“', '"').replace('”', '"')
+
 
 def build():
     out = []
     for sid, title, intro, items, note, key in SEQ:
         text = quote.src(key).search
+        src = [note.ref]
+        if sid == 'sitrep':
+            end = text.index(FIG_V6[1])
+            text = text[text.rindex(FIG_V6[0], 0, end):end]
+            src.append(['jp3093', 'Fig. V-6, p. V-19'])
         for it in items:
-            if it.replace('’', "'").replace('“', '"').replace('”', '"') not in text:
+            words = it.split() if sid == 'sitrep' else [it]
+            if any(_norm(w) not in text for w in words):
                 raise ValueError('sequence %s: %r not in %s' % (sid, it, key))
-        out.append({'id': sid, 'title': title, 'intro': intro, 'items': items, 'note': note.inline(), 'src': [note.ref]})
+        e = {'id': sid, 'title': title, 'intro': intro, 'items': items, 'note': note.inline(), 'src': src}
+        if sid in MN:
+            word, q, hint = MN[sid]
+            if [w[0] for w in word] != [it.lstrip('“"')[0].upper() for it in items]:
+                raise ValueError('sequence %s: mnemonic %s does not match the items' % (sid, word))
+            e['mn'] = {'w': word, 'q': q.inline() if q else '', 'hint': hint or '', 'src': [q.ref] if q else src[1:]}
+        out.append(e)
     return assign_js('drills.sequences', out)
