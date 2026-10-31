@@ -60,6 +60,7 @@
     LP.state.drills[key] = st;
     LP.save();
   }
+  function statSentence(key) { var t = statLine(key); return t.charAt(0).toUpperCase() + t.slice(1); }
   function statLine(key) {
     var st = LP.state.drills[key];
     if (!st || !st.done) return 'noch nicht geübt';
@@ -200,7 +201,7 @@
     var sc = nl.sc;
     var ans = nlAnswers(sc);
     var list = LP.drills.neunline || [];
-    var h = '<div class="view narrow">' + backLink() + head('Training', '9-Line-Trainer', 'Lies die Lage wie auf deinem Notizblock und übertrage sie in den CAS-Brief. Alles ist so gerechnet, wie JP 3-09.3 die Zeilen definiert. ' + esc(statLine('neunline')) + '.');
+    var h = '<div class="view narrow">' + backLink() + head('Training', '9-Line-Trainer', 'Lies die Lage wie auf deinem Notizblock und übertrage sie in den CAS-Brief. Alles ist so gerechnet, wie JP 3-09.3 die Zeilen definiert. ' + esc(statSentence('neunline')) + '.');
     h += '<div class="row"><div class="field" style="min-width:min(100%,320px)"><label for="nl-pick">Lage</label><select id="nl-pick">' +
       list.map(function (s, i) { return '<option value="' + i + '"' + (nl.idx === i ? ' selected' : '') + '>' + esc((i + 1) + '. ' + s.title) + '</option>'; }).join('') +
       '<option value="-1"' + (nl.idx === -1 ? ' selected' : '') + '>Zufallslage erzeugen</option></select></div><span class="spacer"></span>' +
@@ -253,7 +254,7 @@
   V.kontrolle = function () {
     var items = koItems();
     if (!ko.order) ko.order = LP.shuffle(items.map(function (_, i) { return i; }));
-    var h = '<div class="view narrow">' + backLink() + head('Training', 'Kontrollart und Angriffsmethode', 'Beurteile jede Lage: Welche Kontrollart (Type 1, 2, 3) und welche Angriffsmethode (BOT, BOC) passt? Grundlage sind die Kriterien aus JP 3-09.3. ' + esc(statLine('kontrolle')) + '.');
+    var h = '<div class="view narrow">' + backLink() + head('Training', 'Kontrollart und Angriffsmethode', 'Beurteile jede Lage: Welche Kontrollart (Type 1, 2, 3) und welche Angriffsmethode (BOT, BOC) passt? Grundlage sind die Kriterien aus JP 3-09.3. ' + esc(statSentence('kontrolle')) + '.');
     if (ko.pos >= ko.order.length) {
       h += '<div class="panel stack"><h3>Durchgang beendet</h3><p>' + ko.right + ' von ' + ko.total + ' Lagen vollständig richtig.</p><div class="row"><button class="btn accent" type="button" data-act="ko-restart">Neu mischen</button></div></div></div>';
       return h;
@@ -303,7 +304,7 @@
     var list = sqItems();
     if (!sq.pool) sqReset(0);
     var s = list[sq.idx];
-    var h = '<div class="view narrow">' + backLink() + head('Training', 'Reihenfolgen', 'Tippe die Bausteine in der richtigen Reihenfolge an. Ein Tipp auf einen gesetzten Baustein legt ihn zurück. ' + esc(statLine('reihenfolge')) + '.');
+    var h = '<div class="view narrow">' + backLink() + head('Training', 'Reihenfolgen', 'Tippe die Bausteine in der richtigen Reihenfolge an. Ein Tipp auf einen gesetzten Baustein legt ihn zurück. ' + esc(statSentence('reihenfolge')) + '.');
     h += '<div class="field" style="max-width:420px"><label for="sq-pick">Format</label><select id="sq-pick">' + list.map(function (x, i) {
       var st = LP.state.drills['seq-' + x.id];
       return '<option value="' + i + '"' + (i === sq.idx ? ' selected' : '') + '>' + esc(x.title) + (st && st.ok ? ' ✓' : '') + '</option>';
@@ -348,7 +349,7 @@
   }
   V.brevitytrainer = function () {
     if (!bt.q) btNew();
-    var h = '<div class="view narrow">' + backLink() + head('Training', 'Brevity-Trainer', 'Brevity-Begriffe aus ATP 1-02.1 (2025). Achte auf die Kennzeichnung: <span class="chip warn">*</span> NATO-Bedeutung weicht ab, <span class="chip crit">**</span> kein NATO-Brevity-Begriff. ' + esc(statLine('brevity')) + '.');
+    var h = '<div class="view narrow">' + backLink() + head('Training', 'Brevity-Trainer', 'Brevity-Begriffe aus ATP 1-02.1 (2025). Achte auf die Kennzeichnung: <span class="chip warn">*</span> NATO-Bedeutung weicht ab, <span class="chip crit">**</span> kein NATO-Brevity-Begriff. ' + esc(statSentence('brevity')) + '.');
     h += '<div class="row"><fieldset><legend>Richtung</legend><div class="row">' +
       '<label class="check"><input type="radio" name="bt-mode" value="term"' + (bt.mode === 'term' ? ' checked' : '') + '><span>Begriff → Bedeutung</span></label>' +
       '<label class="check"><input type="radio" name="bt-mode" value="mean"' + (bt.mode === 'mean' ? ' checked' : '') + '><span>Bedeutung → Begriff</span></label></div></fieldset>' +
@@ -539,7 +540,7 @@
   V.rechnen = function () {
     if (!rc.task) rcNew();
     var t = rc.task;
-    var h = '<div class="view narrow">' + backLink() + head('Training', 'Rechentrainer', 'Zufallsaufgaben zu Werten, die du im Kopf parat haben musst. Jede Aufgabe ist neu erzeugt. ' + esc(statLine('rechnen')) + '.');
+    var h = '<div class="view narrow">' + backLink() + head('Training', 'Rechentrainer', 'Zufallsaufgaben zu Werten, die du im Kopf parat haben musst. Jede Aufgabe ist neu erzeugt. ' + esc(statSentence('rechnen')) + '.');
     h += '<div class="row"><div class="field" style="min-width:min(100%,320px)"><label for="rc-sel">Aufgabentyp</label><select id="rc-sel"><option value="mix">gemischt</option>' +
       CALC.map(function (c) { return '<option value="' + c.id + '"' + (rc.sel === c.id ? ' selected' : '') + '>' + esc(c.t) + '</option>'; }).join('') + '</select></div>' +
       '<span class="spacer"></span><span class="small muted">Runde: ' + rc.right + ' von ' + rc.total + '</span></div>';

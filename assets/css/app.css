@@ -737,6 +737,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); outline
   grid-template-columns: 1.8rem minmax(0, 1fr);
   gap: 0.4rem;
 }
+/* Vorrat ohne Nummer: Text nutzt die volle Breite */
+.seq-pool .seq-item { grid-template-columns: minmax(0, 1fr); }
 .seq-item:hover { border-color: var(--ink); }
 .seq-item .sn { font: 700 0.9rem var(--f-mono); color: var(--accent); }
 .seq-item.ok { border-color: var(--ok); background: var(--ok-soft); }
