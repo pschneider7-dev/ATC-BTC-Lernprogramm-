@@ -70,15 +70,15 @@
     var has = !!LP.inhalt;
     var h = '<div class="view narrow"><div class="page-head"><div class="eyebrow">Lernen</div><h1>Kapitel</h1>' +
       '<p class="lead">' + (has
-        ? 'Kapitel für Kapitel lernen – mit Aufgaben, in denen du Definitionen, Abläufe und Zuordnungen selbst wiedergibst.'
+        ? 'Üben statt lesen: Definitionen, Listen und Abläufe selbst wiedergeben – zu den Stellen, die du in der Vorschrift ausgewählt hast.'
         : 'Hier erscheinen die Kapitel, sobald du deine Inhaltsdatei geladen hast.') + '</p></div>';
     if (has) {
       LP.inhalt.parts.forEach(function (p) {
         h += '<section class="stack"><h2>' + esc(p.title) + '</h2><div class="module-list">' + p.chapters.map(function (c) {
           var t = taskCount(c), d = doneCount(c);
           return '<a class="module-row" href="#kap-' + esc(c.id) + '"><span class="nr">' + esc(String(c.nr).padStart(2, '0')) + '</span>' +
-            '<span><span class="t">' + esc(c.title) + '</span><br><span class="d">' + numbered(c) + ' Abschnitte</span></span>' +
-            '<span class="p"><span>' + (t ? d + '/' + t + ' sitzen' : 'noch leer') + '</span>' + (t ? '<span class="progress"><span style="width:' + LP.pct(d, t) + '%"></span></span>' : '') + '</span></a>';
+            '<span><span class="t">' + esc(c.title) + '</span><br><span class="d">' + (t ? t + ' Aufgaben' : 'noch keine Aufgaben') + '</span></span>' +
+            '<span class="p"><span>' + (t ? d + '/' + t + ' sitzen' : '') + '</span>' + (t ? '<span class="progress"><span style="width:' + LP.pct(d, t) + '%"></span></span>' : '') + '</span></a>';
         }).join('') + '</div></section>';
       });
     }
@@ -160,11 +160,23 @@
     var all = tasksOf(c), done = doneCount(c), open = all.length - done;
     var h = '<div class="view narrow"><header class="module-head"><span class="nr">' + esc(r.x.p.title) + ' · KAPITEL ' + esc(c.nr) + '</span>' +
       '<h1>' + esc(c.title) + '</h1><p class="lead">' + numbered(c) + ' Abschnitte' +
-      (all.length ? ' · ' + all.length + ' Aufgaben, ' + done + ' sitzen.' : '. Aufgaben kommen Abschnitt für Abschnitt dazu.') + '</p>' +
+      (all.length ? ' · ' + all.length + ' Aufgaben, ' + done + ' sitzen.' : '.') + '</p>' +
       (all.length ? '<div class="row"><button class="btn accent" type="button" data-kt-start="' + esc(c.id) + '" data-open="1"' + (open ? '' : ' disabled') + '>Offene üben (' + open + ')</button>' +
         '<button class="btn ghost" type="button" data-kt-start="' + esc(c.id) + '">Alle üben (' + all.length + ')</button></div>' : '') +
       '</header>';
-    h += '<ol class="kap-tree">' + c.nodes.map(function (n) {
+    // Standard: nur Abschnitte mit Aufgaben – die App ist kein Ersatz für die Vorschrift, sondern zum Üben.
+    // Die ganze Gliederung gibt es auf Wunsch zur Orientierung.
+    var nodes = c.nodes;
+    if (!showAll) {
+      nodes = c.nodes.filter(function (n, i) {
+        if (!n.sec) return n.tasks && n.tasks.length;
+        for (var j = i + 1; j < c.nodes.length && !c.nodes[j].sec; j++) if (c.nodes[j].tasks && c.nodes[j].tasks.length) return true;
+        return false;
+      });
+    }
+    if (!all.length && !showAll) h += '<p class="muted">Zu diesem Kapitel gibt es noch keine Aufgaben.</p>';
+    h += '<div class="row"><button class="btn ghost small" type="button" data-kap-all>' + (showAll ? 'Nur Abschnitte mit Aufgaben' : 'Ganze Gliederung zeigen') + '</button></div>';
+    if (nodes.length) h += '<ol class="kap-tree">' + nodes.map(function (n) {
       if (n.sec) return '<li class="kap-sec"><span class="kap-sn">Section ' + esc(n.sec) + '</span><span class="kap-t">' + esc(n.t) + '</span></li>';
       return '<li class="kap-node" style="--d:' + Math.max(0, depth(n) - 2) + '">' +
         '<span class="kap-n">' + esc(n.n || '') + '</span><span class="kap-t">' + esc(n.t) +
@@ -180,6 +192,7 @@
 
   /* ---------- Üben ---------- */
   var S = null; // {cid, queue:[{n,t}], pos, res:[0|1|2], checked}
+  var showAll = false;
   function startSession(cid, only, openOnly, noNav) {
     var r = byId(cid); if (!r) return;
     var list = tasksOf(r.x.c);
@@ -293,8 +306,9 @@
     inp.value = '';
   });
   document.addEventListener('click', function (e) {
-    var t = e.target.closest && e.target.closest('[data-kap-remove],[data-kt-start],[data-kt-one],[data-kt],[data-kt-rate]');
+    var t = e.target.closest && e.target.closest('[data-kap-remove],[data-kap-all],[data-kt-start],[data-kt-one],[data-kt],[data-kt-rate]');
     if (!t) return;
+    if (t.hasAttribute('data-kap-all')) { showAll = !showAll; LP.render(true); return; }
     if (t.hasAttribute('data-kap-remove')) {
       if (!t.dataset.confirm) { t.dataset.confirm = '1'; t.textContent = 'Wirklich entfernen? Erneut tippen'; return; }
       drop(); LP.inhalt = null; S = null; LP.render(); LP.toast('Inhalt entfernt'); return;
