@@ -827,7 +827,7 @@ details.mnemo[open] summary { margin-bottom: 0.4rem; }
 .kt-li.ok { border-color: var(--ok); background: var(--ok-soft); }
 .kt-li.bad { border-color: var(--crit); background: var(--crit-soft); }
 .kt-score { font: 700 1.2rem var(--f-display); letter-spacing: 0.02em; }
-.kt-ref { line-height: 1.6; }
+.kt-ref { line-height: 1.6; white-space: pre-line; }
 mark.hit, mark.miss, mark.kw { border-radius: 3px; padding: 0 0.15em; }
 mark.hit { background: var(--ok-soft); color: var(--ok); }
 mark.miss { background: var(--crit-soft); color: var(--crit); text-decoration: underline; text-underline-offset: 2px; }
@@ -837,3 +837,20 @@ mark.kw { background: var(--accent-soft); color: inherit; }
 .kt-rate { display: grid; gap: 0.35rem; margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid var(--rule); }
 #kt-out { display: grid; gap: 0.6rem; }
 blockquote.kt-ref { margin: 0; font-style: normal; color: var(--ink); background: var(--card); border-left: 3px solid var(--nato); border-radius: 0 var(--r) var(--r) 0; padding: 0.7rem 1rem 0.6rem; overflow-wrap: break-word; }
+.kt-in.kt-one { min-height: 0; max-width: 30rem; }
+.kt-opts { display: grid; gap: 0.45rem; }
+.kt-opt, .kt-blk { width: 100%; text-align: left; font: inherit; line-height: 1.4; padding: 0.65rem 0.85rem; border: 1px solid var(--rule); border-radius: var(--r); background: var(--card); color: var(--ink); cursor: pointer; }
+.kt-opt:hover:not([disabled]), .kt-blk:hover:not([disabled]) { border-color: var(--ink); background: var(--tint); }
+.kt-opt.ok, .kt-blk.ok { border-color: var(--ok); background: var(--ok-soft); }
+.kt-opt.bad, .kt-blk.bad { border-color: var(--crit); background: var(--crit-soft); }
+.kt-opt.dim { opacity: 0.55; }
+.kt-opt[disabled], .kt-blk[disabled] { cursor: default; }
+.kt-blank { display: inline-block; padding: 0 0.3em; border-radius: 3px; background: var(--ink); color: var(--card); font-size: 0.8em; letter-spacing: 0.1em; vertical-align: 0.05em; }
+.kt-seq-ans { list-style: decimal; margin: 0; padding-left: 1.6rem; display: grid; gap: 0.4rem; min-height: 3rem; border: 1px dashed var(--rule); border-radius: var(--r); padding-block: 0.5rem; padding-right: 0.5rem; }
+.kt-seq-empty { list-style: none; margin-left: -1.6rem; padding-left: 0.6rem; color: var(--ink-3); font-size: 0.9rem; }
+.kt-seq-pool { display: grid; gap: 0.4rem; margin-top: 0.7rem; }
+.kt-cloze { white-space: pre-line; line-height: 2.3; font-size: 1.02rem; background: var(--card); border: 1px solid var(--rule); border-radius: var(--r); padding: 0.6rem 0.9rem; overflow-wrap: break-word; }
+.kt-gap { font: inherit; font-size: 0.98rem; max-width: 100%; padding: 0.1rem 0.35rem; border: 0; border-bottom: 2px solid var(--ink-3); background: var(--tint); color: var(--ink); border-radius: 3px 3px 0 0; }
+.kt-gap:focus { outline: 2px solid var(--accent); }
+.kt-gap.ok { border-bottom-color: var(--ok); background: var(--ok-soft); }
+.kt-gap.bad { border-bottom-color: var(--crit); background: var(--crit-soft); }

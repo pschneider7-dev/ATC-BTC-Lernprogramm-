@@ -87,7 +87,7 @@
   };
 
   /* ---------- Aufgaben: Stand und Prüfung ---------- */
-  var TYPE = { def: 'Definition', list: 'Liste' };
+  var TYPE = { def: 'Definition', list: 'Liste', abbr: 'Abkürzung', match: 'Zuordnung', choice: 'Frage', seq: 'Reihenfolge', cloze: 'Lückentext' };
   var RATE = ['Nochmal', 'Teilweise', 'Sitzt'];
   function tasksOf(c) {
     var out = [];
@@ -120,19 +120,22 @@
     var tol = w.length >= 9 ? 2 : w.length >= 5 ? 1 : 0;
     return list.some(function (u) { return u === w || (tol && Math.abs(u.length - w.length) <= tol && lev(u, w) <= tol); });
   }
-  function hit(kw, list) {
+  var alts = function (k) { return String(k).split('|'); };
+  var first = function (k) { return alts(k)[0]; };
+  function hit(kw, list) { return alts(kw).some(function (k) { return hit1(k, list); }); }
+  function hit1(kw, list) {
     var ws = words(kw).filter(function (w) { return STOP.indexOf(' ' + w + ' ') < 0; });
     if (!ws.length) ws = words(kw);
     return ws.every(function (w) { return wordIn(w, list); });
   }
-  function same(a, b) { var x = words(a).join(' '), y = words(b).join(' '); var tol = y.length >= 9 ? 2 : y.length >= 5 ? 1 : 0; return x === y || (tol && lev(x, y) <= tol); }
+  function same(a, b) { return alts(b).some(function (y0) { var x = words(a).join(' '), y = words(y0).join(' '); var tol = y.length >= 9 ? 2 : y.length >= 5 ? 1 : 0; return !!x && (x === y || (tol && lev(x, y) <= tol)); }); }
   function mask(s) { return s.replace(/[A-Za-zÄÖÜäöüß]+/g, function (w) { return w[0] + w.slice(1).replace(/./g, '_'); }); }
   // Wortlaut mit markierten Schlüsselbegriffen (gefunden / fehlt)
   function marked(a, kws, found) {
     var spans = [];
     kws.forEach(function (k, i) {
-      var pos = a.toLowerCase().indexOf(k.toLowerCase());
-      if (pos >= 0) spans.push({ a: pos, b: pos + k.length, ok: found ? found[i] : null });
+      var f = first(k), pos = a.toLowerCase().indexOf(f.toLowerCase());
+      if (pos >= 0) spans.push({ a: pos, b: pos + f.length, ok: found ? found[i] : null });
     });
     spans.sort(function (x, y) { return x.a - y.a; });
     var out = '', at = 0;
@@ -223,41 +226,131 @@
         '<a class="btn ghost" href="#kap-' + esc(c.id) + '">Zum Kapitel</a></div></div>';
     }
     var x = S.queue[S.pos], t = x.t;
+    if (!S.sub || S.sub.id !== t.id) S.sub = initSub(t);
+    S.checked = false;
     var h = head + '<div class="kt-meta"><span>' + esc(TYPE[t.type] || t.type) + ' · ' + esc(x.n.n) + ' ' + esc(x.n.t) + '</span><span>' + (S.pos + 1) + ' / ' + S.queue.length + '</span></div>' +
       '<div class="progress"><span style="width:' + LP.pct(S.pos, S.queue.length) + '%"></span></div>' +
       '<h1 class="kt-q">' + esc(t.q) + '</h1>' + (t.hint ? '<p class="muted">' + esc(t.hint) + '</p>' : '') + '</div>';
+    var std = true;
     if (t.type === 'def') {
       h += '<label class="kt-lbl" for="kt-in">Deine Definition (englisch, aus dem Kopf)</label>' +
-        '<textarea id="kt-in" class="kt-in" rows="6" spellcheck="false" autocapitalize="sentences" placeholder="' + esc(t.q) + ' is …"></textarea>';
+        '<textarea id="kt-in" class="kt-in" rows="6" spellcheck="false" autocapitalize="sentences" placeholder="' + esc(t.ph != null ? t.ph : t.q + ' is …') + '"></textarea>';
+    } else if (t.type === 'abbr') {
+      h += '<label class="kt-lbl" for="kt-in">Ausgeschrieben (englisch)</label>' +
+        '<input id="kt-in" class="kt-in kt-one" type="text" autocomplete="off" spellcheck="false" autocapitalize="words">';
     } else if (t.type === 'list') {
       h += '<div class="kt-list">' + t.items.map(function (_, i) {
         return '<input type="text" class="kt-li" data-i="' + i + '" autocomplete="off" spellcheck="false" aria-label="Eintrag ' + (i + 1) + '" placeholder="' + (i + 1) + '.">';
       }).join('') + '</div>';
+    } else if (t.type === 'cloze') {
+      h += '<div class="kt-cloze">' + t.a.split(/\[\[(.+?)\]\]/).map(function (part, i) {
+        if (i % 2 === 0) return esc(part);
+        var g = (i - 1) / 2, w = Math.max(8, first(part).length + 3);
+        return '<input type="text" class="kt-gap" data-g="' + g + '" style="width:' + w + 'ch" autocomplete="off" spellcheck="false" aria-label="Lücke ' + (g + 1) + '">';
+      }).join('') + '</div>';
+    } else if (t.type === 'seq') {
+      h += '<div id="kt-box">' + seqHtml(t, false) + '</div>';
+    } else if (t.type === 'choice' || t.type === 'match') {
+      std = false;
+      h += '<div id="kt-box">' + (t.type === 'choice' ? choiceHtml(t) : matchHtml(t)) + '</div>';
     }
-    h += '<div class="row"><button class="btn accent" type="button" data-kt="check">Prüfen</button>' +
+    if (std) h += '<div class="row"><button class="btn accent" type="button" data-kt="check">Prüfen</button>' +
       '<button class="btn ghost" type="button" data-kt="hint">Tipp</button>' +
-      '<button class="btn ghost" type="button" data-kt="show">Lösung zeigen</button></div>' +
-      '<div id="kt-hint"></div><div id="kt-out" aria-live="polite"></div></div>';
-    S.checked = false;
+      '<button class="btn ghost" type="button" data-kt="show">Lösung zeigen</button></div>';
+    h += '<div id="kt-hint"></div><div id="kt-out" aria-live="polite"></div></div>';
     return h;
+  }
+  function initSub(t) {
+    var o = { id: t.id };
+    if (t.type === 'match') { o.order = LP.shuffle(t.pairs.map(function (_, i) { return i; })); o.i = 0; o.ok = 0; o.pick = null; o.opts = null; }
+    if (t.type === 'choice') { o.order = LP.shuffle(t.options.map(function (_, i) { return i; })); o.pick = null; }
+    if (t.type === 'seq') { o.pool = LP.shuffle(t.items.map(function (_, i) { return i; })); o.ans = []; o.done = false; }
+    return o;
   }
   function rateRow(suggest) {
     return '<div class="kt-rate"><span class="small muted">Wie saß es?</span><div class="row">' + RATE.map(function (l, i) {
       return '<button type="button" class="btn' + (i === suggest ? ' accent' : ' ghost') + '" data-kt-rate="' + i + '">' + l + '</button>';
     }).join('') + '</div></div>';
   }
+  function box(html) { var b = document.getElementById('kt-box'); if (b) b.innerHTML = html; }
+  function focusRate(el) { var b = (el || document).querySelector('.kt-rate .btn.accent'); if (b) b.focus({ preventScroll: true }); }
+
+  /* Zuordnung: Beschreibung mit geschwärztem Begriff, vier Antworten aus demselben Pool */
+  function reEsc(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  function maskText(a, terms, reveal) {
+    if (!terms || !terms.length) return esc(a);
+    var re = new RegExp('(^|[^A-Za-z])(' + terms.slice().sort(function (x, y) { return y.length - x.length; }).map(reEsc).join('|') + ')(?![A-Za-z])', 'gi');
+    var out = '', at = 0, m;
+    while ((m = re.exec(a))) {
+      var s0 = m.index + m[1].length;
+      out += esc(a.slice(at, s0)) + (reveal ? '<mark class="kw">' + esc(m[2]) + '</mark>' : '<span class="kt-blank" aria-label="gesuchter Begriff">▢▢▢</span>');
+      at = s0 + m[2].length; re.lastIndex = at;
+    }
+    return out + esc(a.slice(at));
+  }
+  function poolPairs(t) {
+    if (!t.pool) return t.pairs;
+    var out = [];
+    chapters().forEach(function (x) { tasksOf(x.c).forEach(function (y) { if (y.t.type === 'match' && y.t.pool === t.pool) out = out.concat(y.t.pairs); }); });
+    return out;
+  }
+  function matchHtml(t) {
+    var sb = S.sub, n = t.pairs.length;
+    if (sb.i >= n) {
+      var sug = sb.ok === n ? 2 : sb.ok >= Math.ceil(n * 0.7) ? 1 : 0;
+      return '<p class="kt-score">' + sb.ok + ' von ' + n + ' richtig zugeordnet</p>' + rateRow(sug);
+    }
+    var p = t.pairs[sb.order[sb.i]];
+    if (!sb.opts) {
+      var others = LP.shuffle(poolPairs(t).map(function (q) { return q.k; }).filter(function (k, i, arr) { return k !== p.k && arr.indexOf(k) === i; }));
+      sb.opts = LP.shuffle([p.k].concat(others.slice(0, 3)));
+    }
+    var done = sb.pick !== null;
+    return '<p class="small muted">Beschreibung ' + (sb.i + 1) + ' von ' + n + (done ? '' : ' – welches Element ist gemeint?') + '</p>' +
+      '<blockquote class="quote kt-ref">' + maskText(p.a, p.mask || [p.k], done) + '</blockquote>' +
+      '<div class="kt-opts">' + sb.opts.map(function (k, i) {
+        var cls = !done ? '' : k === p.k ? ' ok' : i === sb.pick ? ' bad' : ' dim';
+        return '<button type="button" class="kt-opt' + cls + '" data-km="' + i + '"' + (done ? ' disabled' : '') + '>' + esc(k) + '</button>';
+      }).join('') + '</div>' +
+      (done ? (p.full ? '<p class="small"><strong>' + esc(p.k) + '</strong> = ' + esc(p.full) + '</p>' : '') +
+        '<div class="row"><button class="btn accent" type="button" data-kt="mnext">' + (sb.i + 1 < n ? 'Nächste Beschreibung' : 'Auswertung') + '</button></div>' : '');
+  }
+  /* Auswahlfrage */
+  function choiceHtml(t) {
+    var sb = S.sub, done = sb.pick !== null, ok = done && t.options[sb.order[sb.pick]] === t.options[t.correct];
+    return '<div class="kt-opts">' + sb.order.map(function (oi, i) {
+      var cls = !done ? '' : oi === t.correct ? ' ok' : i === sb.pick ? ' bad' : ' dim';
+      return '<button type="button" class="kt-opt' + cls + '" data-kc="' + i + '"' + (done ? ' disabled' : '') + '>' + esc(t.options[oi]) + '</button>';
+    }).join('') + '</div>' +
+      (done ? '<p class="kt-score">' + (ok ? 'Richtig' : 'Falsch – richtig: ' + esc(t.options[t.correct])) + '</p>' +
+        (t.a ? '<blockquote class="quote kt-ref">' + esc(t.a) + '</blockquote>' : '') + rateRow(ok ? 2 : 0) : '');
+  }
+  /* Reihenfolge: Bausteine antippen */
+  function seqHtml(t, checked) {
+    var sb = S.sub;
+    var ans = '<ol class="kt-seq-ans">' + (sb.ans.length ? sb.ans.map(function (it, j) {
+      var cls = checked ? (it === j ? ' ok' : ' bad') : '';
+      return '<li><button type="button" class="kt-blk' + cls + '" data-ks-back="' + j + '"' + (checked ? ' disabled' : '') + '>' + esc(t.items[it]) + '</button></li>';
+    }).join('') : '<li class="kt-seq-empty">Tippe die Bausteine in der richtigen Reihenfolge an.</li>') + '</ol>';
+    var pool = sb.pool.length ? '<div class="kt-seq-pool">' + sb.pool.map(function (it, j) {
+      return '<button type="button" class="kt-blk" data-ks="' + j + '">' + esc(t.items[it]) + '</button>';
+    }).join('') + '</div>' : '';
+    return ans + pool;
+  }
   function checkTask(reveal) {
-    var x = S.queue[S.pos], t = x.t, out = document.getElementById('kt-out'), h = '', sug = 0;
-    if (t.type === 'def') {
-      var inp = document.getElementById('kt-in'), list = words(inp.value), kws = t.kw || [];
+    var x = S.queue[S.pos], t = x.t, out = document.getElementById('kt-out'), h = '', sug = 0, n, ok;
+    if (t.type === 'def' || t.type === 'abbr') {
+      var inp = document.getElementById('kt-in'), list = words(inp.value), kws = t.kw || [t.a];
       var found = kws.map(function (k) { return !reveal && hit(k, list); });
-      var n = found.filter(Boolean).length;
+      n = found.filter(Boolean).length;
       sug = reveal ? 0 : n === kws.length ? 2 : n >= Math.ceil(kws.length * 0.6) ? 1 : 0;
-      h += (reveal ? '' : '<p class="kt-score">' + n + ' von ' + kws.length + ' Schlüsselbegriffen</p>') +
-        '<blockquote class="quote kt-ref">' + marked(t.a, kws, reveal ? null : found) + '</blockquote>' +
-        (!reveal && n < kws.length ? '<p class="small">Gefehlt: ' + kws.filter(function (_, i) { return !found[i]; }).map(function (k) { return '<mark class="miss">' + esc(k) + '</mark>'; }).join(' · ') + '</p>' : '');
+      if (t.type === 'abbr') h += reveal ? '' : '<p class="kt-score">' + (n === kws.length ? 'Richtig' : 'Nicht ganz') + '</p>';
+      else h += reveal ? '' : '<p class="kt-score">' + n + ' von ' + kws.length + ' Schlüsselbegriffen</p>';
+      h += '<blockquote class="quote kt-ref">' + marked(t.a, kws, reveal ? null : found) + '</blockquote>' +
+        (t.type === 'def' && !reveal && n < kws.length ? '<p class="small">Gefehlt: ' + kws.filter(function (_, i) { return !found[i]; }).map(function (k) { return '<mark class="miss">' + esc(first(k)) + '</mark>'; }).join(' · ') + '</p>' : '');
     } else if (t.type === 'list') {
-      var fields = [].slice.call(document.querySelectorAll('.kt-li')), left = t.items.slice(), ok = 0;
+      var fields = [].slice.call(document.querySelectorAll('.kt-li')), left = t.items.slice();
+      ok = 0;
       fields.forEach(function (f, i) {
         var v = f.value, k = -1;
         if (!reveal && v.trim()) {
@@ -269,20 +362,44 @@
       });
       sug = reveal ? 0 : ok === t.items.length ? 2 : ok >= Math.ceil(t.items.length / 2) ? 1 : 0;
       h += (reveal ? '' : '<p class="kt-score">' + ok + ' von ' + t.items.length + ' richtig</p>') +
-        '<ol class="kt-sol">' + t.items.map(function (it) { return '<li>' + esc(it) + '</li>'; }).join('') + '</ol>' +
+        '<ol class="kt-sol">' + t.items.map(function (it) { return '<li>' + esc(first(it)) + '</li>'; }).join('') + '</ol>' +
         (t.a ? '<blockquote class="quote kt-ref">' + esc(t.a) + '</blockquote>' : '');
+    } else if (t.type === 'cloze') {
+      var gaps = []; t.a.replace(/\[\[(.+?)\]\]/g, function (_, g) { gaps.push(g); return ''; });
+      ok = 0;
+      [].slice.call(document.querySelectorAll('.kt-gap')).forEach(function (f, i) {
+        var good = !reveal && same(f.value, gaps[i]);
+        if (good) ok++;
+        f.classList.toggle('ok', good); f.classList.toggle('bad', !reveal && !good);
+      });
+      sug = reveal ? 0 : ok === gaps.length ? 2 : ok >= Math.ceil(gaps.length * 0.6) ? 1 : 0;
+      h += (reveal ? '' : '<p class="kt-score">' + ok + ' von ' + gaps.length + ' Lücken richtig</p>') +
+        '<blockquote class="quote kt-ref">' + t.a.split(/\[\[(.+?)\]\]/).map(function (part, i) { return i % 2 ? '<mark class="kw">' + esc(first(part)) + '</mark>' : esc(part); }).join('') + '</blockquote>';
+    } else if (t.type === 'seq') {
+      var sb = S.sub;
+      if (reveal) { sb.ans = t.items.map(function (_, i) { return i; }); sb.pool = []; }
+      else { sb.ans = sb.ans.concat(sb.pool); sb.pool = []; }
+      ok = sb.ans.filter(function (it, j) { return it === j; }).length;
+      sb.done = true; box(seqHtml(t, true));
+      sug = reveal ? 0 : ok === t.items.length ? 2 : ok >= Math.ceil(t.items.length * 0.6) ? 1 : 0;
+      h += (reveal ? '' : '<p class="kt-score">' + ok + ' von ' + t.items.length + ' an der richtigen Stelle</p>') +
+        (reveal || ok === t.items.length ? '' : '<ol class="kt-sol">' + t.items.map(function (it) { return '<li>' + esc(it) + '</li>'; }).join('') + '</ol>');
     }
     if (t.note) h += '<p class="small muted">' + esc(t.note) + '</p>';
     out.innerHTML = h + rateRow(sug);
     S.checked = true;
-    var b = out.querySelector('.kt-rate .btn.accent'); if (b) b.focus({ preventScroll: true });
+    focusRate(out);
     out.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
   function showHint() {
-    var t = S.queue[S.pos].t, el = document.getElementById('kt-hint');
-    var src = t.type === 'def' ? (t.kw || []) : t.items;
-    el.innerHTML = '<p class="small muted">' + (t.type === 'def' ? 'Schlüsselbegriffe: ' : 'Anfangsbuchstaben: ') +
-      src.map(function (k) { return '<span class="kt-mask">' + esc(mask(k)) + '</span>'; }).join(' · ') + '</p>';
+    var t = S.queue[S.pos].t, el = document.getElementById('kt-hint'), src, lbl = 'Anfangsbuchstaben: ';
+    if (t.type === 'def') { src = t.kw || []; lbl = 'Schlüsselbegriffe: '; }
+    else if (t.type === 'abbr') src = [t.a];
+    else if (t.type === 'list') src = t.items;
+    else if (t.type === 'cloze') { src = []; t.a.replace(/\[\[(.+?)\]\]/g, function (_, g) { src.push(g); return ''; }); }
+    else if (t.type === 'seq') { el.innerHTML = '<p class="small muted">Der erste Baustein: <strong>' + esc(t.items[0]) + '</strong></p>'; return; }
+    else return;
+    el.innerHTML = '<p class="small muted">' + lbl + src.map(function (k) { return '<span class="kt-mask">' + esc(mask(first(k))) + '</span>'; }).join(' · ') + '</p>';
   }
 
   /* ---------- Ereignisse ---------- */
@@ -306,7 +423,7 @@
     inp.value = '';
   });
   document.addEventListener('click', function (e) {
-    var t = e.target.closest && e.target.closest('[data-kap-remove],[data-kap-all],[data-kt-start],[data-kt-one],[data-kt],[data-kt-rate]');
+    var t = e.target.closest && e.target.closest('[data-kap-remove],[data-kap-all],[data-kt-start],[data-kt-one],[data-kt],[data-kt-rate],[data-km],[data-kc],[data-ks],[data-ks-back]');
     if (!t) return;
     if (t.hasAttribute('data-kap-all')) { showAll = !showAll; LP.render(true); return; }
     if (t.hasAttribute('data-kap-remove')) {
@@ -321,6 +438,16 @@
     }
     if (!S) return;
     var a = t.getAttribute('data-kt');
+    var cur = S.queue[S.pos] && S.queue[S.pos].t, sb = S.sub;
+    if (t.hasAttribute('data-km') && cur && cur.type === 'match' && sb.pick === null) {
+      sb.pick = Number(t.getAttribute('data-km'));
+      if (sb.opts[sb.pick] === cur.pairs[sb.order[sb.i]].k) sb.ok++;
+      box(matchHtml(cur)); var nx = document.querySelector('[data-kt="mnext"]'); if (nx) nx.focus({ preventScroll: true }); return;
+    }
+    if (a === 'mnext' && cur && cur.type === 'match') { sb.i++; sb.pick = null; sb.opts = null; box(matchHtml(cur)); focusRate(); return; }
+    if (t.hasAttribute('data-kc') && cur && cur.type === 'choice' && sb.pick === null) { sb.pick = Number(t.getAttribute('data-kc')); box(choiceHtml(cur)); focusRate(); return; }
+    if (t.hasAttribute('data-ks') && cur && cur.type === 'seq' && !sb.done) { sb.ans.push(sb.pool.splice(Number(t.getAttribute('data-ks')), 1)[0]); box(seqHtml(cur, false)); return; }
+    if (t.hasAttribute('data-ks-back') && cur && cur.type === 'seq' && !sb.done) { sb.pool.push(sb.ans.splice(Number(t.getAttribute('data-ks-back')), 1)[0]); box(seqHtml(cur, false)); return; }
     if (a === 'check') checkTask(false);
     else if (a === 'show') checkTask(true);
     else if (a === 'hint') showHint();
@@ -332,6 +459,6 @@
   });
   document.addEventListener('keydown', function (e) {
     // Strg/⌘ + Enter prüft die Eingabe
-    if (S && !S.checked && e.key === 'Enter' && (e.ctrlKey || e.metaKey) && document.getElementById('kt-out')) { e.preventDefault(); checkTask(false); }
+    if (S && !S.checked && e.key === 'Enter' && (e.ctrlKey || e.metaKey) && document.querySelector('[data-kt="check"]')) { e.preventDefault(); checkTask(false); }
   });
 })();
