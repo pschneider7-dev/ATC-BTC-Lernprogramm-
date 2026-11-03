@@ -26,6 +26,7 @@
       quiz: [],      // Ergebnisse
       drills: {},    // Drill -> {done, ok}
       plan: {},      // Lernplan-Aufgabe -> true
+      kap: {},       // Kapitel-Aufgabe -> {s: 0 nochmal | 1 teilweise | 2 sitzt, n: Versuche, d: Tag} – nur Kennungen, kein Inhalt
       theme: 'auto'
     };
   };

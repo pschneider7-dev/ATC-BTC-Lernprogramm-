@@ -801,3 +801,39 @@ details.mnemo summary { cursor: pointer; font-weight: 600; font-size: 0.9rem; co
 details.mnemo[open] summary { margin-bottom: 0.4rem; }
 .mn-word { display: flex; flex-wrap: wrap; gap: 0.25rem; }
 .mn-word span { font: 700 1.15rem var(--f-mono); min-width: 1.7rem; text-align: center; padding: 0.15rem 0.3rem; border-radius: 6px; background: var(--card); border: 1px solid var(--rule); }
+
+/* Kapitel aus der privaten Inhaltsdatei */
+.kap-file { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.kap-import .btn { position: relative; }
+.kap-tree { list-style: none; margin: 0; padding: 0; border: 1px solid var(--rule); border-radius: var(--r); background: var(--card); }
+.kap-tree li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 0.2rem 0.7rem; align-items: baseline; padding: 0.55rem 0.9rem; }
+.kap-tree li + li { border-top: 1px solid var(--rule); }
+.kap-node { padding-left: calc(0.9rem + var(--d, 0) * 1.1rem) !important; }
+.kap-n { font: 500 0.85rem var(--f-mono); color: var(--ink-3); font-variant-numeric: tabular-nums; min-width: 2.6rem; }
+.kap-t { min-width: 0; overflow-wrap: anywhere; }
+.kap-c { font: 500 0.78rem var(--f-mono); color: var(--ink-3); white-space: nowrap; }
+.kap-sec { background: var(--tint); }
+.kap-sec .kap-sn { font: 700 0.74rem var(--f-body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); white-space: nowrap; }
+.kap-sec .kap-t { font-weight: 600; grid-column: 2 / 4; }
+.kap-tasks { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.35rem; }
+.kap-tasks .chip { cursor: pointer; }
+.kt-meta { display: flex; justify-content: space-between; gap: 1rem; font: 500 0.8rem var(--f-mono); color: var(--ink-3); }
+.kt-q { font-size: clamp(1.6rem, 5vw, 2.2rem); }
+.kt-lbl { font-weight: 600; font-size: 0.9rem; }
+.kt-in, .kt-li { width: 100%; font: inherit; font-size: 1rem; line-height: 1.45; padding: 0.65rem 0.8rem; border: 1px solid var(--rule); border-radius: var(--r); background: var(--card); color: var(--ink); }
+.kt-in { resize: vertical; min-height: 8rem; }
+.kt-in:focus, .kt-li:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.kt-list { display: grid; gap: 0.5rem; max-width: 30rem; }
+.kt-li.ok { border-color: var(--ok); background: var(--ok-soft); }
+.kt-li.bad { border-color: var(--crit); background: var(--crit-soft); }
+.kt-score { font: 700 1.2rem var(--f-display); letter-spacing: 0.02em; }
+.kt-ref { line-height: 1.6; }
+mark.hit, mark.miss, mark.kw { border-radius: 3px; padding: 0 0.15em; }
+mark.hit { background: var(--ok-soft); color: var(--ok); }
+mark.miss { background: var(--crit-soft); color: var(--crit); text-decoration: underline; text-underline-offset: 2px; }
+mark.kw { background: var(--accent-soft); color: inherit; }
+.kt-sol { margin: 0.3rem 0 0; padding-left: 1.3rem; display: grid; gap: 0.15rem; font-weight: 600; }
+.kt-mask { font-family: var(--f-mono); letter-spacing: 0.04em; }
+.kt-rate { display: grid; gap: 0.35rem; margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid var(--rule); }
+#kt-out { display: grid; gap: 0.6rem; }
+blockquote.kt-ref { margin: 0; font-style: normal; color: var(--ink); background: var(--card); border-left: 3px solid var(--nato); border-radius: 0 var(--r) var(--r) 0; padding: 0.7rem 1rem 0.6rem; overflow-wrap: break-word; }

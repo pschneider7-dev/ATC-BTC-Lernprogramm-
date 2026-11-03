@@ -22,6 +22,10 @@ Neue Versionen lädt die App im Hintergrund, sobald sie mit Netz geöffnet wird;
 
 Dein Fortschritt bleibt im `localStorage` dieses Browsers: gelesene Abschnitte, Kartenfächer, Quizergebnisse, Lernplan und Abgleich-Häkchen. Unter **Fortschritt & Daten** kopierst du ihn als Text und lädst ihn auf einem anderen Gerät wieder.
 
+## Kapitel aus einer privaten Inhaltsdatei
+
+Unter **Kapitel** zeigt die App Kapitel mit Übungsaufgaben: Definitionen frei eintippen (Abgleich der Schlüsselbegriffe, danach Selbsteinschätzung „Nochmal / Teilweise / Sitzt“) und Listen ausfüllen. Die Inhalte dafür stehen **nicht** in diesem Repository: Sie kommen aus einer Inhaltsdatei (`.json`, Format `jtac-lp-inhalt`), die man unter **Kapitel → Datei auswählen** auf dem eigenen Gerät lädt. Sie bleibt nur im Speicher dieses Browsers; der Lernstand speichert nur Aufgaben-Kennungen und Bewertungen. Den Aufbau der Datei beschreibt der Kopf von `assets/js/kapitel.js`.
+
 ## Inhalt
 
 | Bereich | Umfang |

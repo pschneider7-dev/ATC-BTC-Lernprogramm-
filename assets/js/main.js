@@ -6,7 +6,7 @@
   var LP = window.LP;
   var V = LP.views;
 
-  var PAGES = ['start', 'module', 'spick', 'karten', 'quiz', 'training', 'funk', 'glossar', 'brevity', 'quellen', 'plan', 'daten',
+  var PAGES = ['start', 'kapitel', 'module', 'spick', 'karten', 'quiz', 'training', 'funk', 'glossar', 'brevity', 'quellen', 'plan', 'daten',
     'neunline', 'kontrolle', 'reihenfolge', 'brevitytrainer', 'rechnen'];
 
   function parseHash() {
@@ -14,6 +14,8 @@
     if (!h) return { tok: 'start' };
     var m = /^(m\d\d)(?:-(m\d\ds\d+))?$/.exec(h);
     if (m) return { tok: m[1], module: m[1], anchor: m[2] ? h : null };
+    var k = /^kap-([\w.-]+)$/.exec(h);
+    if (k) return { tok: h, kap: k[1] };
     return { tok: h };
   }
 
@@ -26,6 +28,7 @@
     var main = document.getElementById('main');
     var html;
     if (r.module) html = V.moduleView(r.module);
+    else if (r.kap) html = V.kapitelView(r.kap);
     else if (PAGES.indexOf(r.tok) >= 0 && typeof V[r.tok] === 'function') html = V[r.tok]();
     else html = V.notFound();
     var y = window.scrollY;

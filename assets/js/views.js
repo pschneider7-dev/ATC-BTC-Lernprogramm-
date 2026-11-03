@@ -9,7 +9,8 @@
   var NAV = [
     { label: 'Lernen', items: [
       { tok: 'start', text: 'Start' },
-      { tok: 'module', text: 'Module', badge: function () { return LP.modules.length; } },
+      { tok: 'kapitel', text: 'Kapitel', badge: function () { return LP.kapitelCount ? (LP.kapitelCount() || '') : ''; } },
+      { tok: 'module', text: 'Module (bisher)', badge: function () { return LP.modules.length; } },
       { tok: 'spick', text: 'Spickzettel' }
     ] },
     { label: 'Üben', items: [
@@ -34,6 +35,7 @@
     var nav = document.getElementById('nav');
     var activeTok = current;
     if (/^m\d\d/.test(current)) activeTok = 'module';
+    if (/^kap-/.test(current)) activeTok = 'kapitel';
     if (TRAINING_TOKENS.indexOf(current) >= 0) activeTok = 'training';
     nav.innerHTML = NAV.map(function (g) {
       return '<div class="nav-group"><div class="nav-label">' + esc(g.label) + '</div><ul>' +
