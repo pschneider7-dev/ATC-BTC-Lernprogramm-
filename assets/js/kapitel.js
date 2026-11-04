@@ -278,7 +278,8 @@
   /* Zuordnung: Beschreibung mit geschwärztem Begriff, vier Antworten aus demselben Pool */
   function reEsc(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
   function maskText(a, terms, reveal) {
-    if (!terms || !terms.length) return esc(a);
+    terms = (terms || []).filter(Boolean);
+    if (!terms.length) return esc(a);
     var re = new RegExp('(^|[^A-Za-z])(' + terms.slice().sort(function (x, y) { return y.length - x.length; }).map(reEsc).join('|') + ')(?![A-Za-z])', 'gi');
     var out = '', at = 0, m;
     while ((m = re.exec(a))) {
@@ -306,14 +307,14 @@
       sb.opts = LP.shuffle([p.k].concat(others.slice(0, 3)));
     }
     var done = sb.pick !== null;
-    return '<p class="small muted">Beschreibung ' + (sb.i + 1) + ' von ' + n + (done ? '' : ' – welches Element ist gemeint?') + '</p>' +
+    return '<p class="small muted">' + esc(t.item || 'Beschreibung') + ' ' + (sb.i + 1) + ' von ' + n + (done ? '' : ' – ' + esc(t.ask || 'welches Element ist gemeint?')) + '</p>' +
       '<blockquote class="quote kt-ref">' + maskText(p.a, p.mask || [p.k], done) + '</blockquote>' +
       '<div class="kt-opts">' + sb.opts.map(function (k, i) {
         var cls = !done ? '' : k === p.k ? ' ok' : i === sb.pick ? ' bad' : ' dim';
         return '<button type="button" class="kt-opt' + cls + '" data-km="' + i + '"' + (done ? ' disabled' : '') + '>' + esc(k) + '</button>';
       }).join('') + '</div>' +
       (done ? (p.full ? '<p class="small"><strong>' + esc(p.k) + '</strong> = ' + esc(p.full) + '</p>' : '') +
-        '<div class="row"><button class="btn accent" type="button" data-kt="mnext">' + (sb.i + 1 < n ? 'Nächste Beschreibung' : 'Auswertung') + '</button></div>' : '');
+        '<div class="row"><button class="btn accent" type="button" data-kt="mnext">' + (sb.i + 1 < n ? 'Weiter' : 'Auswertung') + '</button></div>' : '');
   }
   /* Auswahlfrage */
   function choiceHtml(t) {
