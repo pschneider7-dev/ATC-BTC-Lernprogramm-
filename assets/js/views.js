@@ -10,7 +10,6 @@
     { label: 'Lernen', items: [
       { tok: 'start', text: 'Start' },
       { tok: 'kapitel', text: 'Kapitel', badge: function () { return LP.kapitelCount ? (LP.kapitelCount() || '') : ''; } },
-      { tok: 'module', text: 'Module (bisher)', badge: function () { return LP.modules.length; } },
       { tok: 'spick', text: 'Spickzettel' }
     ] },
     { label: 'Üben', items: [
@@ -24,8 +23,7 @@
       { tok: 'brevity', text: 'Brevity', badge: function () { return LP.brevity.length; } },
       { tok: 'quellen', text: 'Quellen' }
     ] },
-    { label: 'Planen', items: [
-      { tok: 'plan', text: 'Lernplan' },
+    { label: 'Daten', items: [
       { tok: 'daten', text: 'Fortschritt & Daten' }
     ] }
   ];
@@ -34,7 +32,6 @@
   V.renderNav = function (current) {
     var nav = document.getElementById('nav');
     var activeTok = current;
-    if (/^m\d\d/.test(current)) activeTok = 'module';
     if (/^kap-/.test(current)) activeTok = 'kapitel';
     if (TRAINING_TOKENS.indexOf(current) >= 0) activeTok = 'training';
     nav.innerHTML = NAV.map(function (g) {
@@ -48,61 +45,48 @@
   };
 
   /* ---------- Fortschritt ---------- */
-  function allSections() {
-    var out = [];
-    LP.sortedModules().forEach(function (m) { m.sections.forEach(function (s) { out.push({ m: m, s: s }); }); });
-    return out;
-  }
-  function moduleProgress(m) {
-    var done = m.sections.filter(function (s) { return LP.state.read[s.id]; }).length;
-    return { done: done, total: m.sections.length, pct: LP.pct(done, m.sections.length) };
-  }
-  function atpTotals() {
-    var total = 0, done = 0;
-    LP.modules.forEach(function (m) {
-      (m.atp || []).forEach(function (_, i) { total++; if (LP.state.atp[m.id + '-a' + i]) done++; });
-      (m.jfire || []).forEach(function (_, i) { total++; if (LP.state.atp[m.id + '-j' + i]) done++; });
-    });
-    return { done: done, total: total };
-  }
   function cardState(id) { return LP.state.cards[id]; }
   function dueCount() {
     var today = LP.dayNumber();
     return LP.cards.filter(function (c) { var st = cardState(c.id); return st && st.box > 0 && st.due <= today; }).length;
   }
   V.dueCount = dueCount;
+  var unitLabel = function (id) { var u = LP.unitById ? LP.unitById(id) : null; return u ? 'Kapitel ' + u.nr : ''; };
 
   /* ---------- Start ---------- */
   V.start = function () {
-    var secs = allSections();
-    var read = secs.filter(function (x) { return LP.state.read[x.s.id]; }).length;
-    var next = secs.filter(function (x) { return !LP.state.read[x.s.id]; })[0];
+    var has = !!LP.inhalt;
+    var tot = has ? LP.kapitelTotals() : { total: 0, done: 0, next: null };
     var learned = LP.cards.filter(function (c) { var st = LP.state.cards[c.id]; return st && st.box >= 3; }).length;
     var quizzes = LP.state.quiz || [];
     var lastQ = quizzes.length ? quizzes[quizzes.length - 1] : null;
-    var atp = atpTotals();
     var due = dueCount();
 
     var h = '<div class="view">' + V.appPanel('start');
     h += '<section class="hero"><div class="stack-lg">' +
       '<div class="eyebrow">Vorbereitung JTAC Basic und Advanced Training Course</div>' +
       '<h1>Close Air Support <span>lernen</span>, bevor der Lehrgang beginnt.</h1>' +
-      '<p class="lead">14 Module, ' + LP.cards.length + ' Karteikarten, ' + LP.quiz.length + ' Prüfungsfragen und sechs Trainer. Alle Vorschriftentexte und Definitionen stehen im englischen Originalwortlaut mit Seitenangabe – aus öffentlich freigegebenen Vorschriften, vor allem JP 3-09.3. Jedes Modul sagt dir, was du in deiner ATP-3.3.2.1 abgleichen sollst.</p>' +
+      '<p class="lead">' + (has
+        ? tot.total + ' Aufgaben in ' + LP.kapitelCount() + ' Kapiteln, daraus ' + LP.cards.length + ' Karteikarten und ' + LP.quiz.length + ' Prüfungsfragen – dazu sechs Trainer, Spickzettel, Glossar und Brevity.'
+        : 'Lade deine Inhaltsdatei, dann erscheinen hier Kapitel, Karteikarten und Prüfungsfragen. Trainer, Spickzettel, Glossar und Brevity stehen sofort bereit.') + '</p>' +
       '<div class="row">' +
-      (next ? '<a class="btn accent" href="#' + next.m.id + '-' + next.s.id + '">Weiterlernen: ' + esc(next.m.nr + '.' + (next.m.sections.indexOf(next.s) + 1) + ' ' + next.s.title) + '</a>' : '<a class="btn accent" href="#quiz">Probeprüfung starten</a>') +
-      '<a class="btn ghost" href="#karten">Karteikarten' + (due ? ' (' + due + ' fällig)' : '') + '</a></div>' +
+      (!has ? '<a class="btn accent" href="#kapitel">Inhaltsdatei laden</a>'
+        : tot.next ? '<a class="btn accent" href="#kap-' + esc(tot.next.id) + '">Weiterüben: Kapitel ' + esc(tot.next.nr) + ' ' + esc(tot.next.title) + '</a>'
+        : '<a class="btn accent" href="#quiz">Probeprüfung</a>') +
+      (has ? '<a class="btn ghost" href="#karten">Karteikarten' + (due ? ' (' + due + ' fällig)' : '') + '</a>' : '') + '</div>' +
       '</div>' +
-      '<div class="notice"><strong>Quellenlage</strong><p class="small">Inhalte stammen aus öffentlich freigegebenen US- und NATO-Dokumenten. Aus der ATP-3.3.2.1 (NATO UNCLASSIFIED) und der JFIRE (CUI) ist <strong>nichts</strong> übernommen. Wo die NATO abweicht, gilt im Lehrgang deine ATP.</p><a class="small" href="#quellen">Quellen ansehen</a></div>' +
+      '<div class="notice"><strong>Quellenlage</strong><p class="small">Die App selbst enthält nichts aus der ATP-3.3.2.1 (NATO UNCLASSIFIED) und der JFIRE (CUI). Kapitel, Karteikarten und Prüfungsfragen entstehen erst auf deinem Gerät aus deiner privaten Inhaltsdatei. Trainer, Spickzettel, Glossar, Brevity und Funkbeispiele stammen aus öffentlich freigegebenen Dokumenten.</p></div>' +
       '</section>';
 
-    h += '<div class="status-strip">' +
-      stat('Abschnitte gelesen', read + '/' + secs.length, LP.pct(read, secs.length) + ' %') +
-      stat('Karten sicher', learned + '/' + LP.cards.length, 'ab Fach 3') +
-      stat('Letztes Quiz', lastQ ? lastQ.score + ' %' : '–', lastQ ? (lastQ.correct + ' von ' + lastQ.total + (lastQ.exam ? ', Prüfung' : '')) : 'noch keins') +
-      stat('ATP-Abgleich', atp.done + '/' + atp.total, 'Aufträge erledigt') +
-      '</div>';
-
-    h += '<section class="stack"><div class="row"><h2>Module</h2><span class="spacer"></span><a class="small" href="#module">Alle Module</a></div>' + moduleList() + '</section>';
+    if (has) {
+      h += '<div class="status-strip">' +
+        stat('Aufgaben sitzen', tot.done + '/' + tot.total, LP.pct(tot.done, tot.total) + ' %') +
+        stat('Karten sicher', learned + '/' + LP.cards.length, 'ab Fach 3') +
+        stat('Karten fällig', String(due), 'heute') +
+        stat('Letztes Quiz', lastQ ? lastQ.score + ' %' : '–', lastQ ? (lastQ.correct + ' von ' + lastQ.total + (lastQ.exam ? ', Prüfung' : '')) : 'noch keins') +
+        '</div>';
+      h += '<section class="stack"><div class="row"><h2>Kapitel</h2><span class="spacer"></span><a class="small" href="#kapitel">Alle Kapitel</a></div>' + LP.kapitelRows() + '</section>';
+    }
 
     h += '<section class="stack"><h2>Trainieren</h2><div class="grid-cards">' +
       tile('neunline', '9-Line-Trainer', 'Szenario lesen, Brief aufbauen, Einheiten umrechnen, Readback-Pflichten prüfen.') +
@@ -118,75 +102,16 @@
     function stat(k, v, s) { return '<div><span class="k">' + esc(k) + '</span><span class="v">' + esc(v) + '</span><span class="s">' + esc(s) + '</span></div>'; }
     function tile(tok, t, d) { return '<a class="panel" href="#' + tok + '" style="text-decoration:none;color:inherit;display:grid;gap:.35rem"><h3>' + esc(t) + '</h3><p class="small muted">' + esc(d) + '</p></a>'; }
   };
-
-  function moduleList() {
-    return '<div class="module-list">' + LP.sortedModules().map(function (m) {
-      var p = moduleProgress(m);
-      return '<a class="module-row" href="#' + m.id + '"><span class="nr">' + String(m.nr).padStart(2, '0') + '</span>' +
-        '<span><span class="t">' + esc(m.title) + '</span><br><span class="d">' + esc(m.summary) + '</span></span>' +
-        '<span class="p"><span>' + p.done + '/' + p.total + '</span><span class="progress"><span style="width:' + p.pct + '%"></span></span></span></a>';
-    }).join('') + '</div>';
-  }
-
-  V.module = function () {
-    return '<div class="view narrow"><div class="page-head"><div class="eyebrow">Lernen</div><h1>Module</h1>' +
-      '<p class="lead">Die Module bauen aufeinander auf. Für den Lehrgang besonders wichtig: 4 (Kontrollarten), 5 (Ablauf), 6 (9-Line), 7 (Korrelation) und 8 (Laser).</p></div>' + moduleList() + '</div>';
-  };
-
-  /* ---------- Modulansicht ---------- */
-  V.moduleView = function (id) {
-    var m = LP.moduleById(id);
-    if (!m) return V.notFound();
-    var mods = LP.sortedModules();
-    var idx = mods.indexOf(m);
-    var prev = mods[idx - 1], next = mods[idx + 1];
-    var p = moduleProgress(m);
-    var h = '<div class="view narrow">';
-    h += '<header class="module-head"><span class="nr">MODUL ' + String(m.nr).padStart(2, '0') + ' / ' + mods.length + '</span>' +
-      '<h1>' + esc(m.title) + '</h1><p class="lead">' + esc(m.summary) + '</p>' +
-      '<div class="row small muted"><span>' + p.done + ' von ' + p.total + ' Abschnitten gelesen</span><span class="spacer"></span>' +
-      '<a href="#quiz" data-quiz-module="' + m.id + '">Quiz zu diesem Modul</a><a href="#karten" data-cards-module="' + m.id + '">Karten zu diesem Modul</a></div>' +
-      '<div class="toc">' + m.sections.map(function (s, i) {
-        return '<a class="chip' + (LP.state.read[s.id] ? ' ok' : '') + '" href="#' + m.id + '-' + s.id + '">' + m.nr + '.' + (i + 1) + ' ' + esc(s.title) + '</a>';
-      }).join('') + '</div></header>';
-    if (m.goals && m.goals.length) {
-      h += '<div class="panel flat"><h4>Lernziele</h4><ul class="small" style="margin:.3rem 0 0;padding-left:1.2rem;display:grid;gap:.2rem">' +
-        m.goals.map(function (g) { return '<li>' + esc(g) + '</li>'; }).join('') + '</ul></div>';
-    }
-    m.sections.forEach(function (s, i) {
-      h += '<section class="section" id="' + m.id + '-' + s.id + '"><h2><span class="sn">' + m.nr + '.' + (i + 1) + '</span>' + esc(s.title) + '</h2>' +
-        '<div class="prose">' + s.html + '</div>' +
-        '<div class="section-foot">' + LP.srcChips(s.src) +
-        '<label class="read-toggle"><input type="checkbox" id="read-' + s.id + '" data-read="' + s.id + '"' + (LP.state.read[s.id] ? ' checked' : '') + '> gelesen und verstanden</label></div></section>';
-    });
-    if ((m.atp && m.atp.length) || (m.jfire && m.jfire.length)) {
-      h += '<section class="section"><h2><span class="sn">✓</span>Abgleich mit deinen Print-Vorschriften</h2>';
-      if (m.atp && m.atp.length) {
-        h += LP.callout('atp', 'ATP-3.3.2.1 Ed. D – Abgleich-Aufträge', '<div class="task-list">' + m.atp.map(function (t, i) {
-          var key = m.id + '-a' + i;
-          return '<label class="check"><input type="checkbox" id="atp-' + key + '" data-atp="' + key + '"' + (LP.state.atp[key] ? ' checked' : '') + '><span>' + esc(t) + '</span></label>';
-        }).join('') + '</div>');
-      }
-      if (m.jfire && m.jfire.length) {
-        h += LP.callout('warn', 'JFIRE – Nachschlage-Aufträge (CUI: keine Werte übertragen)', '<div class="task-list">' + m.jfire.map(function (t, i) {
-          var key = m.id + '-j' + i;
-          return '<label class="check"><input type="checkbox" id="atp-' + key + '" data-atp="' + key + '"' + (LP.state.atp[key] ? ' checked' : '') + '><span>' + esc(t) + '</span></label>';
-        }).join('') + '</div>');
-      }
-      h += '<p class="small muted">Gespeichert wird nur, dass ein Auftrag erledigt ist – nicht, was in der Vorschrift steht.</p></section>';
-    }
-    h += '<nav class="row" aria-label="Modulnavigation">' +
-      (prev ? '<a class="btn ghost" href="#' + prev.id + '">← ' + prev.nr + ' ' + esc(prev.title) + '</a>' : '') +
-      '<span class="spacer"></span>' +
-      (next ? '<a class="btn" href="#' + next.id + '">' + next.nr + ' ' + esc(next.title) + ' →</a>' : '<a class="btn" href="#quiz">Zur Probeprüfung →</a>') +
-      '</nav></div>';
-    return h;
+  var noContent = function (what) {
+    return '<div class="panel stack"><h3>Noch keine ' + what + '</h3><p>' + what + ' entstehen aus deiner Inhaltsdatei – lade sie unter <a href="#kapitel">Kapitel</a>.</p></div>';
   };
 
   /* ---------- Karteikarten (Leitner) ---------- */
   var INTERVALS = [0, 1, 2, 4, 8, 16]; // Tage je Fach 1..5
   var cardSession = null;
   V.cardFilter = 'all';
+  // nach neuer Inhaltsdatei: Kartenrunde und Quiz neu aufbauen
+  V.resetSessions = function () { cardSession = null; quiz = null; V.cardFilter = 'all'; V.quizPreselect = null; };
 
   function buildCardSession() {
     var today = LP.dayNumber();
@@ -205,23 +130,24 @@
     var h = '<div class="view narrow"><div class="page-head"><div class="eyebrow">Üben</div><h1>Karteikarten</h1>' +
       '<p class="lead">Leitner-System: Gewusste Karten wandern ein Fach weiter und kommen später wieder (nach 1, 2, 4, 8 und 16 Tagen). Nicht gewusste Karten gehen zurück in Fach 1. Pro Runde kommen alle fälligen Karten und bis zu 15 neue.</p></div>';
     h += '<div class="row"><div class="field" style="min-width:min(100%,320px)"><label for="card-filter">Karten aus</label><select id="card-filter">' +
-      '<option value="all">allen Modulen</option>' + LP.sortedModules().map(function (m) {
-        return '<option value="' + m.id + '"' + (V.cardFilter === m.id ? ' selected' : '') + '>Modul ' + m.nr + ': ' + esc(m.title) + '</option>';
+      '<option value="all">allen Kapiteln</option>' + LP.units().filter(function (u) { return LP.cards.some(function (c) { return c.m === u.id; }); }).map(function (m) {
+        return '<option value="' + m.id + '"' + (V.cardFilter === m.id ? ' selected' : '') + '>Kapitel ' + m.nr + ': ' + esc(m.title) + '</option>';
       }).join('') + '</select></div><span class="spacer"></span><button class="btn ghost small" type="button" data-act="cards-restart">Neue Runde</button></div>';
     h += '<div class="leitner">' + ['Neu', 'Fach 1', 'Fach 2', 'Fach 3', 'Fach 4', 'Fach 5'].map(function (k, i) {
       return '<div><span class="k">' + k + '</span><span class="v">' + boxes[i] + '</span></div>';
     }).join('') + '</div>';
     var s = cardSession;
-    if (!s.queue.length || s.pos >= s.queue.length) {
+    if (!LP.cards.length) {
+      h += noContent('Karteikarten');
+    } else if (!s.queue.length || s.pos >= s.queue.length) {
       h += '<div class="panel stack"><h3>' + (s.queue.length ? 'Runde beendet' : 'Gerade nichts fällig') + '</h3>' +
-        (s.queue.length ? '<p>' + s.right + ' gewusst, ' + s.wrong + ' noch üben.</p>' : '<p>Alle Karten dieser Auswahl sind für heute erledigt. Wähle andere Module oder komm morgen wieder.</p>') +
+        (s.queue.length ? '<p>' + s.right + ' gewusst, ' + s.wrong + ' noch üben.</p>' : '<p>Alle Karten dieser Auswahl sind für heute erledigt. Wähle andere Kapitel oder komm morgen wieder.</p>') +
         '<div class="row"><button class="btn" type="button" data-act="cards-restart">Neue Runde starten</button><a class="btn ghost" href="#quiz">Zum Quiz</a></div></div>';
     } else {
       var c = s.queue[s.pos];
       var st = cardState(c.id);
-      var m = LP.moduleById(c.m);
       h += '<div class="flash-wrap"><article class="flash" aria-live="polite"><div class="fh"><span>Karte ' + (s.pos + 1) + ' von ' + s.queue.length + '</span>' +
-        '<span>' + (m ? 'Modul ' + m.nr : '') + ' · ' + (st ? 'Fach ' + st.box : 'neu') + '</span></div>' +
+        '<span>' + unitLabel(c.m) + ' · ' + (st ? 'Fach ' + st.box : 'neu') + '</span></div>' +
         '<div class="fb"><div class="q">' + c.q + '</div>' +
         (s.shown ? '<div class="a">' + c.a + (c.src ? LP.srcChips(c.src) : '') + '</div>' : '') + '</div>' +
         '<div class="ff">' + (s.shown
@@ -254,14 +180,16 @@
     return quizQuestion();
   };
   function quizSetup() {
+    if (!LP.quiz.length) return '<div class="view narrow"><div class="page-head"><div class="eyebrow">Üben</div><h1>Quiz &amp; Prüfung</h1></div>' + noContent('Prüfungsfragen') + '</div>';
     var sel = V.quizPreselect;
     var h = '<div class="view narrow"><div class="page-head"><div class="eyebrow">Üben</div><h1>Quiz &amp; Prüfung</h1>' +
       '<p class="lead">Im Übungsmodus siehst du nach jeder Frage die Lösung mit Begründung und Quelle. Im Prüfungsmodus kommt die Auswertung am Ende; bestanden ist ab 80 %.</p></div>';
-    h += '<form class="stack-lg" id="quiz-form"><fieldset><legend>Module</legend><div class="row" style="margin-bottom:.5rem"><button class="btn ghost small" type="button" data-act="quiz-all">alle</button><button class="btn ghost small" type="button" data-act="quiz-none">keine</button></div><div class="checks">' +
-      LP.sortedModules().map(function (m) {
+    h += '<form class="stack-lg" id="quiz-form"><fieldset><legend>Kapitel</legend><div class="row" style="margin-bottom:.5rem"><button class="btn ghost small" type="button" data-act="quiz-all">alle</button><button class="btn ghost small" type="button" data-act="quiz-none">keine</button></div><div class="checks">' +
+      LP.units().map(function (m) {
         var n = LP.quiz.filter(function (q) { return q.m === m.id; }).length;
+        if (!n) return '';
         var on = sel ? sel === m.id : true;
-        return '<label class="check"><input type="checkbox" name="qm" id="qm-' + m.id + '" value="' + m.id + '"' + (on ? ' checked' : '') + '><span>' + m.nr + ' · ' + esc(m.title) + ' <span class="muted small">(' + n + ')</span></span></label>';
+        return '<label class="check"><input type="checkbox" name="qm" id="qm-' + m.id + '" value="' + m.id + '"' + (on ? ' checked' : '') + '><span>Kapitel ' + m.nr + ' · ' + esc(m.title) + ' <span class="muted small">(' + n + ')</span></span></label>';
       }).join('') + '</div></fieldset>' +
       '<div class="two-col"><fieldset><legend>Anzahl</legend><div class="row">' + [10, 20, 40, 60].map(function (n, i) {
         return '<label class="check"><input type="radio" name="qn" id="qn-' + n + '" value="' + n + '"' + (i === 1 ? ' checked' : '') + '><span>' + n + '</span></label>';
@@ -289,10 +217,9 @@
   function quizQuestion() {
     var it = quiz.items[quiz.pos];
     var q = it.q;
-    var m = LP.moduleById(q.m);
     var answered = it.picked !== null;
     var showFb = answered && !quiz.exam;
-    var h = '<div class="view narrow"><div class="row small muted"><span>Frage ' + (quiz.pos + 1) + ' von ' + quiz.items.length + ' · ' + (quiz.exam ? 'Prüfung' : 'Übung') + (m ? ' · Modul ' + m.nr : '') + '</span><span class="spacer"></span><button class="btn ghost small" type="button" data-act="quiz-cancel">Abbrechen</button></div>' +
+    var h = '<div class="view narrow"><div class="row small muted"><span>Frage ' + (quiz.pos + 1) + ' von ' + quiz.items.length + ' · ' + (quiz.exam ? 'Prüfung' : 'Übung') + (unitLabel(q.m) ? ' · ' + unitLabel(q.m) : '') + '</span><span class="spacer"></span><button class="btn ghost small" type="button" data-act="quiz-cancel">Abbrechen</button></div>' +
       '<div class="progress"><span style="width:' + LP.pct(quiz.pos, quiz.items.length) + '%"></span></div>' +
       '<div class="quiz-q">' + q.q + '</div><div class="options">' +
       it.order.map(function (oi, k) {
@@ -321,12 +248,12 @@
     if (wrong.length) {
       h += '<section class="stack"><h2>Zum Nacharbeiten</h2>' + wrong.map(function (it) {
         var q = it.q;
-        var mm = LP.moduleById(q.m);
-        return '<div class="panel stack"><div class="small muted">' + (mm ? '<a href="#' + mm.id + '">Modul ' + mm.nr + ' · ' + esc(mm.title) + '</a>' : '') + '</div>' +
+        var mm = LP.unitById(q.m);
+        return '<div class="panel stack"><div class="small muted">' + (mm ? '<a href="#' + mm.id + '">Kapitel ' + mm.nr + ' · ' + esc(mm.title) + '</a>' : '') + '</div>' +
           '<div style="font-weight:600">' + q.q + '</div>' +
           '<div class="small">Deine Antwort: <span class="chip crit">' + (it.picked === null ? '–' : q.o[it.picked]) + '</span></div>' +
           '<div class="small">Richtig: <span class="chip ok">' + q.o[q.a] + '</span></div>' +
-          (q.e ? '<p class="small muted">' + q.e + '</p>' : '') + LP.srcChips(q.src) + '</div>';
+          (q.e ? '<div class="small muted">' + q.e + '</div>' : '') + LP.srcChips(q.src) + '</div>';
       }).join('') + '</section>';
     }
     h += '</div>';
@@ -427,30 +354,10 @@
     return h;
   };
 
-  /* ---------- Lernplan ---------- */
-  V.plan = function () {
-    var total = 0, done = 0;
-    LP.plan.forEach(function (w) { w.tasks.forEach(function (t) { total++; if (LP.state.plan[t.id]) done++; }); });
-    var h = '<div class="view narrow"><div class="page-head"><div class="eyebrow">Planen</div><h1>Lernplan: 8 Wochen</h1>' +
-      '<p class="lead">Ein Vorschlag mit etwa 45 bis 60 Minuten pro Tag. Passe das Tempo an deinen Lehrgangsbeginn an.</p>' +
-      '<div class="row small"><span>' + done + ' von ' + total + ' Aufgaben erledigt</span></div><div class="progress"><span style="width:' + LP.pct(done, total) + '%"></span></div></div>';
-    LP.plan.forEach(function (w) {
-      var wd = w.tasks.filter(function (t) { return LP.state.plan[t.id]; }).length;
-      h += '<section class="panel week"><div class="week-head"><h3>Woche ' + w.week + ': ' + esc(w.title) + '</h3><span class="small muted">' + wd + '/' + w.tasks.length + '</span></div>' +
-        (w.focus ? '<p class="small muted">' + esc(w.focus) + '</p>' : '') + '<div class="task-list">' +
-        w.tasks.map(function (t) {
-          return '<label class="check"><input type="checkbox" id="plan-' + t.id + '" data-plan="' + t.id + '"' + (LP.state.plan[t.id] ? ' checked' : '') + '><span>' + esc(t.text) +
-            (t.link ? ' <a href="#' + t.link + '">öffnen</a>' : '') + '</span></label>';
-        }).join('') + '</div></section>';
-    });
-    h += '</div>';
-    return h;
-  };
-
   /* ---------- Daten ---------- */
   V.daten = function () {
     var json = JSON.stringify(LP.state);
-    var h = '<div class="view narrow"><div class="page-head"><div class="eyebrow">Planen</div><h1>Fortschritt &amp; Daten</h1>' +
+    var h = '<div class="view narrow"><div class="page-head"><div class="eyebrow">Daten</div><h1>Fortschritt &amp; Daten</h1>' +
       '<p class="lead">Dein Fortschritt wird nur in diesem Browser bzw. in der installierten App gespeichert. Mit dem Code unten überträgst du ihn auf ein anderes Gerät oder vom Browser in die App.</p></div>' +
       V.appPanel('daten') +
       '<section class="panel stack"><h3>Darstellung</h3><div class="row">' +
@@ -461,7 +368,7 @@
       '<textarea id="export-box" readonly>' + esc(json) + '</textarea><div class="row"><button class="btn" type="button" data-act="export-copy">Kopieren</button></div></section>' +
       '<section class="panel stack"><h3>Fortschritt laden</h3><p class="small muted">Gesicherten Code einfügen. Der aktuelle Stand wird überschrieben.</p>' +
       '<textarea id="import-box" placeholder="{&quot;read&quot;: …}"></textarea><div class="row"><button class="btn" type="button" data-act="import-apply">Laden</button><span id="import-msg" class="small"></span></div></section>' +
-      '<section class="panel stack"><h3>Zurücksetzen</h3><p class="small muted">Löscht gelesene Abschnitte, Kartenfächer, Quizergebnisse, Lernplan und Abgleich-Häkchen in diesem Browser.</p>' +
+      '<section class="panel stack"><h3>Zurücksetzen</h3><p class="small muted">Löscht Aufgabenstand, Kartenfächer und Quizergebnisse in diesem Browser. Die Inhaltsdatei bleibt.</p>' +
       '<div class="row" id="reset-area"><button class="btn ghost" type="button" data-act="reset-ask">Alles zurücksetzen …</button></div></section></div>';
     return h;
   };
@@ -567,7 +474,6 @@
     var t = e.target;
     if (t.hasAttribute('data-read')) { LP.state.read[t.getAttribute('data-read')] = t.checked; LP.save(); LP.renderNavOnly(); updateToc(); return true; }
     if (t.hasAttribute('data-atp')) { LP.state.atp[t.getAttribute('data-atp')] = t.checked; LP.save(); return true; }
-    if (t.hasAttribute('data-plan')) { LP.state.plan[t.getAttribute('data-plan')] = t.checked; LP.save(); return true; }
     if (t.id === 'card-filter') { V.cardFilter = t.value; buildCardSession(); LP.render(true); return true; }
     if (t.id === 'brev-cat') { V.brevFilter.cat = t.value; document.getElementById('brev-results').innerHTML = brevResults(); return true; }
     if (t.id === 'brev-nato') { V.brevFilter.nato = t.value; document.getElementById('brev-results').innerHTML = brevResults(); return true; }

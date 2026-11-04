@@ -33,27 +33,6 @@ def write(rel, text):
     print('wrote', rel)
 
 
-def build_modules():
-    files = []
-    for nr in range(1, 15):
-        name = 'm%02d' % nr
-        try:
-            spec = importlib.import_module(name).MODULE
-        except ModuleNotFoundError:
-            continue
-        sections = []
-        for s in spec['sections']:
-            html, refs = lib.render(s['items'])
-            sections.append({'id': s['id'], 'title': s['title'], 'html': html, 'src': refs})
-        out = {k: spec[k] for k in ('id', 'nr', 'title', 'summary')}
-        out['sections'] = sections
-        out['atp'] = spec.get('atp', [])
-        out['jfire'] = spec.get('jfire', [])
-        write('data/modules/' + spec['file'], 'window.LP.modules.push(' + js(out) + ');\n')
-        files.append(spec['file'])
-    return files
-
-
 def build_list(modname, var, render_item):
     try:
         mod = importlib.import_module(modname)
@@ -65,8 +44,9 @@ def build_list(modname, var, render_item):
 
 
 if __name__ == '__main__':
-    build_modules()
-    for extra in ('cards', 'quiz', 'glossary', 'brevity', 'scripts', 'spick', 'sequences', 'kontrolle', 'calcrefs'):
+    # Die Modul-Spezifikationen (content/m01–m14) liefern nur noch Bausteine für Spickzettel und Reihenfolgen;
+    # Module, Karteikarten und Quiz entstehen in der App aus der privaten Inhaltsdatei.
+    for extra in ('glossary', 'brevity', 'scripts', 'spick', 'sequences', 'kontrolle', 'calcrefs'):
         try:
             mod = importlib.import_module(extra)
         except ModuleNotFoundError:

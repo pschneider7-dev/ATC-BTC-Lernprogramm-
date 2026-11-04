@@ -73,14 +73,7 @@
         ? 'Üben statt lesen: Definitionen, Listen und Abläufe selbst wiedergeben – zu den Stellen, die du in der Vorschrift ausgewählt hast.'
         : 'Hier erscheinen die Kapitel, sobald du deine Inhaltsdatei geladen hast.') + '</p></div>';
     if (has) {
-      LP.inhalt.parts.forEach(function (p) {
-        h += '<section class="stack"><h2>' + esc(p.title) + '</h2><div class="module-list">' + p.chapters.map(function (c) {
-          var t = taskCount(c), d = doneCount(c);
-          return '<a class="module-row" href="#kap-' + esc(c.id) + '"><span class="nr">' + esc(String(c.nr).padStart(2, '0')) + '</span>' +
-            '<span><span class="t">' + esc(c.title) + '</span><br><span class="d">' + (t ? t + ' Aufgaben' : 'noch keine Aufgaben') + '</span></span>' +
-            '<span class="p"><span>' + (t ? d + '/' + t + ' sitzen' : '') + '</span>' + (t ? '<span class="progress"><span style="width:' + LP.pct(d, t) + '%"></span></span>' : '') + '</span></a>';
-        }).join('') + '</div></section>';
-      });
+      h += '<section class="stack">' + LP.inhalt.parts.map(function (p) { return '<h2>' + esc(p.title) + '</h2>'; }).join('') + LP.kapitelRows() + '</section>';
     }
     h += importPanel(has) + '</div>';
     return h;
@@ -165,7 +158,8 @@
       '<h1>' + esc(c.title) + '</h1><p class="lead">' + numbered(c) + ' Abschnitte' +
       (all.length ? ' · ' + all.length + ' Aufgaben, ' + done + ' sitzen.' : '.') + '</p>' +
       (all.length ? '<div class="row"><button class="btn accent" type="button" data-kt-start="' + esc(c.id) + '" data-open="1"' + (open ? '' : ' disabled') + '>Offene üben (' + open + ')</button>' +
-        '<button class="btn ghost" type="button" data-kt-start="' + esc(c.id) + '">Alle üben (' + all.length + ')</button></div>' : '') +
+        '<button class="btn ghost" type="button" data-kt-start="' + esc(c.id) + '">Alle üben (' + all.length + ')</button></div>' +
+        '<div class="row small"><a href="#karten" data-cards-module="kap-' + esc(c.id) + '">Karteikarten zu diesem Kapitel</a><a href="#quiz" data-quiz-module="kap-' + esc(c.id) + '">Quiz zu diesem Kapitel</a></div>' : '') +
       '</header>';
     // Standard: nur Abschnitte mit Aufgaben – die App ist kein Ersatz für die Vorschrift, sondern zum Üben.
     // Die ganze Gliederung gibt es auf Wunsch zur Orientierung.
@@ -403,6 +397,104 @@
     el.innerHTML = '<p class="small muted">' + lbl + src.map(function (k) { return '<span class="kt-mask">' + esc(mask(first(k))) + '</span>'; }).join(' · ') + '</p>';
   }
 
+  /* ---------- Karteikarten und Prüfungsfragen aus der Inhaltsdatei ----------
+     Beides entsteht beim Laden auf dem Gerät aus den Kapitel-Aufgaben (LP.cards, LP.quiz);
+     Kartenfächer und Quizergebnisse speichern nur Kennungen. */
+  LP.units = function () { return chapters().map(function (x) { return { id: 'kap-' + x.c.id, nr: x.c.nr, title: x.c.title }; }); };
+  LP.unitById = function (id) { var u = LP.units(); for (var i = 0; i < u.length; i++) if (u[i].id === id) return u[i]; return null; };
+  var isTerm = function (q) { return !/[?–]/.test(q) && !/^(Die|Der|Das|Wer|Was|Wie|Wen|Welche|Ist|Hängt) /.test(q); };
+  var termParts = function (q) { var m = /^(.*?)\s*\(([^)]+)\)\s*$/.exec(q); return m ? [m[1], m[2]] : [q]; };
+  var nl = function (s) { return esc(s).replace(/\n/g, '<br>'); };
+  var quote = function (html) { return '<blockquote class="quote kt-ref">' + html + '</blockquote>'; };
+  var olist = function (items) { return '<ol class="kt-sol">' + items.map(function (i) { return '<li>' + esc(first(i)) + '</li>'; }).join('') + '</ol>'; };
+  var uniq = function (a) { return a.filter(function (v, i) { return a.indexOf(v) === i; }); };
+  function others(pool, not, n) { return LP.shuffle(uniq(pool.filter(function (v) { return not.indexOf(v) < 0; }))).slice(0, n); }
+  function buildDerived() {
+    var cards = [], quiz = [], all = [];
+    chapters().forEach(function (x) { tasksOf(x.c).forEach(function (y) { all.push({ c: x.c, n: y.n, t: y.t, m: 'kap-' + x.c.id }); }); });
+    var defs = all.filter(function (z) { return z.t.type === 'def' && isTerm(z.t.q); });
+    var items = []; all.forEach(function (z) { if (z.t.type === 'list') z.t.items.forEach(function (i) { items.push({ id: z.t.id, v: first(i) }); }); });
+    var full = []; all.forEach(function (z) {
+      if (z.t.type === 'abbr') full.push(z.t.a);
+      if (z.t.type === 'match') z.t.pairs.forEach(function (p) { if (p.full) full.push(p.full); });
+    });
+    function mc(z, id, q, right, wrongs, e) {
+      if (!wrongs.length) return;
+      var o = LP.shuffle([right].concat(wrongs));
+      quiz.push({ id: 'k:' + id, m: z.m, q: q, o: o.map(esc), a: o.indexOf(right), e: e || '' });
+    }
+    function card(z, id, q, a) { cards.push({ id: 'k:' + id, m: z.m, q: '<span class="small muted">' + esc(z.n.n) + ' ' + esc(z.n.t) + '</span><br>' + q, a: a }); }
+    all.forEach(function (z) {
+      var t = z.t;
+      if (t.type === 'def' || t.type === 'abbr') {
+        card(z, t.id, esc(t.q), t.type === 'abbr' ? '<strong>' + esc(t.a) + '</strong>' : quote(nl(t.a)));
+        if (t.type === 'abbr') mc(z, t.id, esc(t.q), t.a, others(full, [t.a], 3), esc(t.a));
+        else if (isTerm(t.q)) {
+          var same = defs.filter(function (d) { return d.c === z.c; }).map(function (d) { return d.t.q; });
+          var w = others(same, [t.q], 3);
+          if (w.length < 3) w = w.concat(others(defs.map(function (d) { return d.t.q; }), [t.q].concat(w), 3 - w.length));
+          mc(z, t.id, 'Welcher Begriff wird hier definiert?' + quote(maskText(t.a, termParts(t.q), false)), t.q, w, quote(nl(t.a)));
+        }
+      } else if (t.type === 'list') {
+        card(z, t.id, esc(t.q) + (t.hint ? ' <span class="small muted">(' + esc(t.hint) + ')</span>' : ''), olist(t.items));
+        var mine = t.items.map(first), foreign = items.filter(function (i) { return i.id !== t.id && mine.indexOf(i.v) < 0; }).map(function (i) { return i.v; });
+        mc(z, t.id + '-in', 'Was gehört zu „' + esc(t.q) + '“?', LP.pick(mine), others(foreign, [], 3), olist(t.items));
+        if (mine.length >= 3 && foreign.length) {
+          var odd = LP.pick(foreign);
+          mc(z, t.id + '-out', 'Was gehört <strong>nicht</strong> zu „' + esc(t.q) + '“?', odd, LP.shuffle(mine).slice(0, 3), olist(t.items));
+        }
+      } else if (t.type === 'match') {
+        var keys = poolPairs(t).map(function (p) { return p.k; });
+        t.pairs.forEach(function (p, i) {
+          if (t.cards !== false && p.a.length >= 25) card(z, t.id + '-' + i, esc(p.k) + (p.full ? ' <span class="muted">– ' + esc(p.full) + '</span>' : ''), quote(nl(p.a)));
+          mc(z, t.id + '-' + i, esc(t.q) + quote(maskText(p.a, p.mask || [p.k], false)), p.k, others(keys, [p.k], 3),
+            (p.full ? '<strong>' + esc(p.k) + '</strong> = ' + esc(p.full) : '') + quote(maskText(p.a, p.mask || [p.k], true)));
+        });
+      } else if (t.type === 'choice') {
+        var right = t.options[t.correct];
+        card(z, t.id, esc(t.q), '<strong>' + esc(right) + '</strong>' + (t.a ? quote(nl(t.a)) : ''));
+        mc(z, t.id, esc(t.q), right, t.options.filter(function (o) { return o !== right; }), t.a ? quote(nl(t.a)) : '');
+      } else if (t.type === 'seq') {
+        card(z, t.id, esc(t.q), olist(t.items));
+        if (t.items.length >= 4) t.items.slice(0, -1).forEach(function (it, i) {
+          mc(z, t.id + '-' + i, esc(t.q) + '<br><span class="small muted">Was folgt auf:</span>' + quote(esc(it)), t.items[i + 1], others(t.items, [it, t.items[i + 1]], 3), olist(t.items));
+        });
+      } else if (t.type === 'cloze') {
+        card(z, t.id, esc(t.q), quote(t.a.split(/\[\[(.+?)\]\]/).map(function (p, i) { return i % 2 ? '<mark class="kw">' + esc(first(p)) + '</mark>' : esc(p); }).join('').replace(/\n/g, '<br>')));
+        var gaps = []; t.a.replace(/\[\[(.+?)\]\]/g, function (_, g) { gaps.push(first(g)); return ''; });
+        if (uniq(gaps).length >= 3) {
+          var k = 0;
+          t.a.split('\n').forEach(function (line) {
+            var parts = line.split(/\[\[(.+?)\]\]/);
+            for (var g = 1; g < parts.length; g += 2) {
+              var html = parts.map(function (p, i) { return i % 2 ? (i === g ? '<span class="kt-blank">▢▢▢</span>' : esc(first(p))) : esc(p); }).join('');
+              mc(z, t.id + '-' + (k++), esc(t.q) + quote(html), first(parts[g]), others(gaps, [first(parts[g])], 3), quote(esc(line.replace(/\[\[(.+?)\]\]/g, function (_, x) { return first(x); }))));
+            }
+          });
+        }
+      }
+    });
+    LP.cards = cards;
+    LP.quiz = quiz;
+    if (V.resetSessions) V.resetSessions();
+  }
+  LP.rebuildDerived = buildDerived;
+
+  /* Kapitelliste für Start- und Kapitelseite */
+  LP.kapitelRows = function () {
+    return '<div class="module-list">' + chapters().map(function (x) {
+      var c = x.c, t = taskCount(c), d = doneCount(c);
+      return '<a class="module-row" href="#kap-' + esc(c.id) + '"><span class="nr">' + esc(String(c.nr).padStart(2, '0')) + '</span>' +
+        '<span><span class="t">' + esc(c.title) + '</span><br><span class="d">' + (t ? t + ' Aufgaben' : 'noch keine Aufgaben') + '</span></span>' +
+        '<span class="p"><span>' + (t ? d + '/' + t + ' sitzen' : '') + '</span>' + (t ? '<span class="progress"><span style="width:' + LP.pct(d, t) + '%"></span></span>' : '') + '</span></a>';
+    }).join('') + '</div>';
+  };
+  LP.kapitelTotals = function () {
+    var t = 0, d = 0, next = null;
+    chapters().forEach(function (x) { var a = taskCount(x.c), b = doneCount(x.c); t += a; d += b; if (!next && a > b) next = x.c; });
+    return { total: t, done: d, next: next };
+  };
+
   /* ---------- Ereignisse ---------- */
   function msg(t) { var el = document.querySelector('.kap-msg'); if (el) el.textContent = t; }
   document.addEventListener('change', function (e) {
@@ -416,6 +508,7 @@
       if (problem) { msg(problem); return; }
       if (!store(o)) { msg('Speichern auf diesem Gerät ist fehlgeschlagen (Speicher voll oder privater Modus).'); return; }
       LP.inhalt = o;
+      buildDerived();
       LP.render();
       LP.toast(LP.kapitelCount() + ' Kapitel geladen');
     };
@@ -429,7 +522,7 @@
     if (t.hasAttribute('data-kap-all')) { showAll = !showAll; LP.render(true); return; }
     if (t.hasAttribute('data-kap-remove')) {
       if (!t.dataset.confirm) { t.dataset.confirm = '1'; t.textContent = 'Wirklich entfernen? Erneut tippen'; return; }
-      drop(); LP.inhalt = null; S = null; LP.render(); LP.toast('Inhalt entfernt'); return;
+      drop(); LP.inhalt = null; S = null; buildDerived(); LP.render(); LP.toast('Inhalt entfernt'); return;
     }
     if (t.hasAttribute('data-kt-start')) { startSession(t.getAttribute('data-kt-start'), null, t.hasAttribute('data-open')); return; }
     if (t.hasAttribute('data-kt-one')) {
@@ -462,4 +555,5 @@
     // Strg/⌘ + Enter prüft die Eingabe
     if (S && !S.checked && e.key === 'Enter' && (e.ctrlKey || e.metaKey) && document.querySelector('[data-kt="check"]')) { e.preventDefault(); checkTask(false); }
   });
+  buildDerived();
 })();

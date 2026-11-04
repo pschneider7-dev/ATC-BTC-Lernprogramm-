@@ -2,7 +2,7 @@
 
 Ein Lernprogramm zur Vorbereitung auf den JTAC Basic Training Course (BTC) und den Advanced Training Course (ATC). Es ist aus **öffentlich freigegebenen** US- und NATO-Vorschriften aufgebaut.
 
-**Alles, was aus einer Vorschrift stammt, steht im englischen Originalwortlaut** – Modultexte, Definitionen, Formate, Brevity, Funksprüche und die Begründungen zu Quiz, Karten und Trainern, jeweils mit Seitenangabe. Deutsch sind nur Bedienung, Fragen, Lagebeschreibungen der Trainer und Rechenwege.
+**Alles, was aus einer Vorschrift stammt, steht im englischen Originalwortlaut** – Definitionen, Formate, Brevity, Funksprüche, Spickzettel und die Begründungen der Trainer, jeweils mit Seitenangabe. Deutsch sind nur Bedienung, Fragen, Lagebeschreibungen der Trainer und Rechenwege.
 
 ## Als App auf dem iPhone
 
@@ -20,20 +20,19 @@ Neue Versionen lädt die App im Hintergrund, sobald sie mit Netz geöffnet wird;
 
 Öffne `index.html` in einem aktuellen Browser (Chrome, Edge, Firefox, Safari). Du brauchst weder Server noch Installation. Als lokale Datei läuft alles, nur der Offline-Speicher und die Installation als App brauchen eine https-Adresse (oder `python3 -m http.server` und `http://localhost:8000`).
 
-Dein Fortschritt bleibt im `localStorage` dieses Browsers: gelesene Abschnitte, Kartenfächer, Quizergebnisse, Lernplan und Abgleich-Häkchen. Unter **Fortschritt & Daten** kopierst du ihn als Text und lädst ihn auf einem anderen Gerät wieder.
+Dein Fortschritt bleibt im `localStorage` dieses Browsers: Aufgabenstand der Kapitel, Kartenfächer und Quizergebnisse. Unter **Fortschritt & Daten** kopierst du ihn als Text und lädst ihn auf einem anderen Gerät wieder.
 
 ## Kapitel aus einer privaten Inhaltsdatei
 
-Unter **Kapitel** zeigt die App Kapitel mit Übungsaufgaben: Definitionen frei eintippen (Abgleich der Schlüsselbegriffe, danach Selbsteinschätzung „Nochmal / Teilweise / Sitzt“) und Listen ausfüllen. Die Inhalte dafür stehen **nicht** in diesem Repository: Sie kommen aus einer Inhaltsdatei (`.json`, Format `jtac-lp-inhalt`), die man unter **Kapitel → Datei auswählen** auf dem eigenen Gerät lädt. Sie bleibt nur im Speicher dieses Browsers; der Lernstand speichert nur Aufgaben-Kennungen und Bewertungen. Den Aufbau der Datei beschreibt der Kopf von `assets/js/kapitel.js`.
+Unter **Kapitel** zeigt die App Kapitel mit Übungsaufgaben: Definitionen frei eintippen (Abgleich der Schlüsselbegriffe, danach Selbsteinschätzung „Nochmal / Teilweise / Sitzt“) und Listen ausfüllen. Die Inhalte dafür stehen **nicht** in diesem Repository: Sie kommen aus einer Inhaltsdatei (`.json`, Format `jtac-lp-inhalt`), die man unter **Kapitel → Datei auswählen** auf dem eigenen Gerät lädt. Sie bleibt nur im Speicher dieses Browsers; der Lernstand speichert nur Aufgaben-Kennungen und Bewertungen. Aus denselben Aufgaben erzeugt die App auf dem Gerät auch die **Karteikarten** und die Fragen für **Quiz & Prüfung**. Den Aufbau der Datei beschreibt der Kopf von `assets/js/kapitel.js`.
 
 ## Inhalt
 
 | Bereich | Umfang |
 |---|---|
-| Module | 14 Module mit 93 Abschnitten aus wörtlichen Zitaten, Abbildungen als Kniebrett-Karten und Tabellen |
 | Spickzettel | 17 Kniebrett-Karten aus den Abbildungen (Execution Template, Check-in, 9-Line, Kontrollarten, Clearance Calls, RW 5-Line, JFO-Brief, Gunship-CFF, INFLTREP, SALTR, FIDO, TLE, Laser-, IR- und Marking-Brevity, Keyhole, SEAD-Faustformel) |
-| Karteikarten | 140 Karten mit Leitner-System (5 Fächer); Antwort = Originalzitat |
-| Quiz & Prüfung | 96 Fragen, Übungs- und Prüfungsmodus (bestanden ab 80 %); Antwortoptionen im Wortlaut der Vorschrift, Begründung als Zitat |
+| Karteikarten | aus den Kapitel-Aufgaben der Inhaltsdatei, Leitner-System (5 Fächer) |
+| Quiz & Prüfung | aus den Kapitel-Aufgaben der Inhaltsdatei, nach Kapiteln wählbar; Übungs- und Prüfungsmodus (bestanden ab 80 %) |
 | 9-Line-Trainer | 6 feste Lagen und beliebig viele Zufallslagen mit Prüfung jeder Zeile und der Readback-Pflichten |
 | Kontrollart-Trainer | 12 Lagen: Type 1/2/3 und BOT/BOC, aufgelöst mit den Definitionen aus JP 3-09.3 |
 | Reihenfolge-Trainer | 16 Formate und Abläufe, alle Bausteine im Originalwortlaut; Merkwörter MNPOPCA, FIDO und SALTR (offiziell, JP 3-09.3) und TEFACHR (Lehrgang, folgt Fig. V-6) |
@@ -41,7 +40,6 @@ Unter **Kapitel** zeigt die App Kapitel mit Übungsaufgaben: Definitionen frei e
 | Brevity | 119 CAS-relevante Begriffe, Definition wörtlich aus ATP 1-02.1 (2025) Tabelle 2 mit NATO-Kennzeichnung und deutscher Kurzhilfe, plus Trainer |
 | Funkbeispiele | Die 9 Beispiele aus JP 3-09.3 Anhang E vollständig im Wortlaut plus RW 5-Line, Controller-Funksprüche verdeckbar, mit Fragen |
 | Glossar | 140 Abkürzungen, davon 82 mit Definition im Wortlaut (Glossare von JP 3-09.3, JP 3-09, JP 3-52, AJP-3.3 oder definierende Textstelle) |
-| Lernplan | 8 Wochen mit Aufgaben zum Abhaken |
 
 ## Quellen
 
@@ -59,7 +57,7 @@ Alle Inhalte stammen aus diesen öffentlich zugänglichen Dokumenten. Die Fundst
 ## Was bewusst fehlt
 
 - **ATP-3.3.2.1 Edition D** (NATO UNCLASSIFIED, nicht zur Veröffentlichung freigegeben) und **ATP 3-09.32 JFIRE** (CUI) sind nicht öffentlich. Aus beiden ist **nichts** übernommen.
-- Stattdessen nennt jedes Modul **Abgleich-Aufträge** für die ATP und **Nachschlage-Aufträge** für die JFIRE. Die Häkchen speichern nur, dass ein Auftrag erledigt ist, nicht, was in der Vorschrift steht.
+- Kapitel, Karteikarten und Quizfragen zur ATP kommen nur aus der privaten Inhaltsdatei auf dem eigenen Gerät (siehe oben).
 - Bitte trage auch selbst keine Inhalte aus diesen Dokumenten in das Repository ein.
 
 ## Grenzen
@@ -79,20 +77,21 @@ assets/fonts/          Schriften lokal (SIL Open Font License, siehe OFL.txt)
 assets/icons/          App-Symbol (SVG und PNG)
 assets/css/app.css     Gestaltung (hell/dunkel, Telefon bis Desktop)
 assets/js/core.js      Namensraum, Speicher, Bausteine (Kniebrett, Funk, Hinweise)
-assets/js/views.js     Start, Module, Karten, Quiz, Glossar, Brevity, Quellen, Plan, Daten
+assets/js/views.js     Start, Karten, Quiz, Glossar, Brevity, Quellen, Daten
+assets/js/kapitel.js   Kapitel aus der Inhaltsdatei, Aufgabentypen, daraus Karten und Quizfragen
 assets/js/drills.js    Trainer, Funkbeispiele, Spickzettel
-assets/js/main.js      Router (#start, #m05, #m05-m05s3, #quiz …), Ereignisse
+assets/js/main.js      Router (#start, #kapitel, #kap-3, #quiz …), Ereignisse
 data/                  Inhalte als JavaScript-Dateien (laufen auch ohne Server)
 tools/                 Erzeugt die Inhalte aus den Vorschriften (siehe unten)
 ```
 
 ### Inhalte erzeugen
 
-Fast alle Dateien in `data/` werden von `tools/build.py` erzeugt und tragen den Hinweis „Generated by tools/build.py“. Von Hand gepflegt sind nur `data/drills.js` (9-Line-Lagen), `data/plan.js` und `data/sources.js`.
+Fast alle Dateien in `data/` werden von `tools/build.py` erzeugt und tragen den Hinweis „Generated by tools/build.py“. Von Hand gepflegt sind nur `data/drills.js` (9-Line-Lagen) und `data/sources.js`. Die Modul-Spezifikationen `tools/content/m01.py` bis `m14.py` liefern nur noch Bausteine für Spickzettel und Reihenfolgen.
 
 1. Die öffentlichen PDFs mit `pdftotext -layout` nach `tools/src/` umwandeln (Dateinamen siehe `tools/quote.py`, `SOURCES`). Der Ordner ist nicht im Repository.
 2. `python3 tools/build.py` ausführen. Am Ende schreibt `tools/pwa.py` die Dateiliste für den Offline-Speicher neu (`sw.js`); nach Änderungen an HTML, CSS oder JS ohne Build reicht `python3 tools/pwa.py`.
 
 `tools/content/*.py` legt nur fest, **welche** Stelle zitiert wird (Anfangs- und Endphrase, Absatzzahl oder Satzzahl). Den Text selbst liest `tools/quote.py` aus der Vorschrift; findet er eine Phrase nicht oder nicht eindeutig, bricht der Build ab. Abbildungen werden Satz für Satz gegen den Vorschriftentext geprüft. So kann kein umformulierter Text in die App gelangen.
 
-Neue Karteikarten und Quizfragen gehören jeweils **ans Ende** eines Moduls. Die IDs werden fortlaufend vergeben, und der Lernstand hängt an ihnen.
+Die Aufgaben-IDs in der Inhaltsdatei nicht ändern: Aufgabenstand und Kartenfächer hängen an ihnen.

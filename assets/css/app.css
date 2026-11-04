@@ -854,3 +854,5 @@ blockquote.kt-ref { margin: 0; font-style: normal; color: var(--ink); background
 .kt-gap:focus { outline: 2px solid var(--accent); }
 .kt-gap.ok { border-bottom-color: var(--ok); background: var(--ok-soft); }
 .kt-gap.bad { border-bottom-color: var(--crit); background: var(--crit-soft); }
+.quiz-q .kt-ref { font-family: var(--f-body); font-weight: 400; font-size: 1rem; line-height: 1.55; margin-top: 0.6rem; letter-spacing: 0; }
+.quiz-q .small { font-family: var(--f-body); font-weight: 400; }
