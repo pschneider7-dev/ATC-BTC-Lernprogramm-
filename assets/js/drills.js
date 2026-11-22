@@ -244,6 +244,7 @@
       }
       h += '</section><div class="row"><button class="btn accent" type="button" data-act="nl-next">' + (nl.idx >= 0 && nl.idx + 1 < list.length ? 'Nächste Lage' : 'Neue Zufallslage') + '</button></div>';
     }
+    h += LP.calcHtml(nl.checked ? '' : 'nl');
     h += LP.srcChips([['jp3093', 'Kap. V, Abb. V-9'], ['jp3093', 'Kap. III, Methods of Attack']]) + '</div>';
     return h;
   };
@@ -562,6 +563,7 @@
         (ref ? '<div class="small">' + ref.q + '</div>' + LP.srcChips(ref.src) : '') + '</div>' +
         '<div class="row"><button class="btn accent" type="button" data-act="rc-next">Nächste Aufgabe</button></div>';
     }
+    h += LP.calcHtml(t.choice || rc.checked ? '' : 'rc-in');
     h += '</div>';
     return h;
   };

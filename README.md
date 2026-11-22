@@ -36,7 +36,7 @@ Unter **Kapitel** zeigt die App Kapitel mit Übungsaufgaben: Definitionen frei e
 | 9-Line-Trainer | 6 feste Lagen und beliebig viele Zufallslagen mit Prüfung jeder Zeile und der Readback-Pflichten |
 | Kontrollart-Trainer | 12 Lagen: Type 1/2/3 und BOT/BOC, aufgelöst mit den Definitionen aus JP 3-09.3 |
 | Reihenfolge-Trainer | 16 Formate und Abläufe, alle Bausteine im Originalwortlaut; Merkwörter MNPOPCA, FIDO und SALTR (offiziell, JP 3-09.3) und TEFACHR (Lehrgang, folgt Fig. V-6) |
-| Rechentrainer | 18 Aufgabentypen mit Zufallswerten, darunter die **MKS-Formel** (Meter = Kilometer × Strich) in fünf Varianten: Meter, Kilometer, Strich, Seitenverschiebung vom Bezugspunkt und Sprenghöhe (HOB). Zu jeder Lösung die Regel aus der Vorschrift |
+| Rechentrainer | 18 Aufgabentypen mit Zufallswerten, darunter die **MKS-Formel** (Meter = Kilometer × Strich) in fünf Varianten: Meter, Kilometer, Strich, Seitenverschiebung vom Bezugspunkt und Sprenghöhe (HOB). Zu jeder Lösung die Regel aus der Vorschrift. Unter jeder Aufgabe ein Taschenrechner (auch im 9-Line-Trainer), Ergebnis per Knopf ins Antwortfeld |
 | Brevity | 119 CAS-relevante Begriffe, Definition wörtlich aus ATP 1-02.1 (2025) Tabelle 2 mit NATO-Kennzeichnung und deutscher Kurzhilfe, plus Trainer |
 | Funkbeispiele | Die 9 Beispiele aus JP 3-09.3 Anhang E vollständig im Wortlaut plus RW 5-Line, Controller-Funksprüche verdeckbar, mit Fragen |
 | Glossar | 140 Abkürzungen, davon 82 mit Definition im Wortlaut (Glossare von JP 3-09.3, JP 3-09, JP 3-52, AJP-3.3 oder definierende Textstelle) |
