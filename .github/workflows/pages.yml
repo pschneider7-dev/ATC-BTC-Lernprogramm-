@@ -17,13 +17,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  build:
     # private Repositories haben im kostenlosen Konto kein Pages
     if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -42,5 +39,23 @@ jobs:
         with:
           path: _site
 
+  # Eigener Job wie in der Vorlage von GitHub, damit das hochgeladene Paket sicher abrufbar ist.
+  # Meldet GitHub trotzdem „No artifacts named github-pages“, wird nach 30 s ein zweites Mal veröffentlicht.
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url || steps.retry.outputs.page_url }}
+    steps:
       - id: deployment
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+
+      - name: Kurz warten vor dem zweiten Versuch
+        if: steps.deployment.outcome == 'failure'
+        run: sleep 30
+
+      - id: retry
+        if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v4
