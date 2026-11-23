@@ -24,7 +24,9 @@ Dein Fortschritt bleibt im `localStorage` dieses Browsers: Aufgabenstand der Kap
 
 ## Kapitel aus einer privaten Inhaltsdatei
 
-Unter **Kapitel** zeigt die App Kapitel mit Übungsaufgaben: Definitionen frei eintippen (Abgleich der Schlüsselbegriffe, danach Selbsteinschätzung „Nochmal / Teilweise / Sitzt“) und Listen ausfüllen. Die Inhalte dafür stehen **nicht** in diesem Repository: Sie kommen aus einer Inhaltsdatei (`.json`, Format `jtac-lp-inhalt`), die man unter **Kapitel → Datei auswählen** auf dem eigenen Gerät lädt. Sie bleibt nur im Speicher dieses Browsers; der Lernstand speichert nur Aufgaben-Kennungen und Bewertungen. Aus denselben Aufgaben erzeugt die App auf dem Gerät auch die **Karteikarten** und die Fragen für **Quiz & Prüfung**. Den Aufbau der Datei beschreibt der Kopf von `assets/js/kapitel.js`.
+Unter **Kapitel** zeigt die App Kapitel mit Übungsaufgaben: Definitionen frei eintippen oder diktieren (Abgleich der Schlüsselbegriffe, danach Selbsteinschätzung „Nochmal / Teilweise / Sitzt“) und Listen ausfüllen. Die Inhalte dafür stehen **nicht** in diesem Repository: Sie kommen aus einer Inhaltsdatei (`.json`, Format `jtac-lp-inhalt`), die man unter **Kapitel → Datei auswählen** auf dem eigenen Gerät lädt. Sie bleibt nur im Speicher dieses Browsers; der Lernstand speichert nur Aufgaben-Kennungen und Bewertungen. Aus denselben Aufgaben erzeugt die App auf dem Gerät auch die **Karteikarten** und die Fragen für **Quiz & Prüfung**. Den Aufbau der Datei beschreibt der Kopf von `assets/js/kapitel.js`.
+
+**Diktieren:** Unter dem Antwortfeld einer Definition startet der Knopf **Diktieren** die englische Spracherkennung des Browsers (Chrome, Edge, Safari). Der gesprochene Text kommt hinter den bisherigen Text. Erneut tippen beendet das Diktat, ebenso selbst tippen oder **Prüfen**. Die Erkennung übernimmt der Sprachdienst des Browsers bzw. Geräts (je nach Gerät z. B. Apple oder Google); die Inhaltsdatei wird dabei nicht übertragen. Wo der Browser keine Spracherkennung anbietet oder das iPhone sie in der App vom Home-Bildschirm nicht zulässt, zeigt die App stattdessen einen Hinweis auf das Mikrofon der Tastatur.
 
 ## Inhalt
 
@@ -79,6 +81,7 @@ assets/css/app.css     Gestaltung (hell/dunkel, Telefon bis Desktop)
 assets/js/core.js      Namensraum, Speicher, Bausteine (Kniebrett, Funk, Hinweise)
 assets/js/views.js     Start, Karten, Quiz, Glossar, Brevity, Quellen, Daten
 assets/js/kapitel.js   Kapitel aus der Inhaltsdatei, Aufgabentypen, daraus Karten und Quizfragen
+assets/js/diktat.js    Diktieren bei den Definitionen (Spracherkennung des Browsers)
 assets/js/drills.js    Trainer, Funkbeispiele, Spickzettel
 assets/js/main.js      Router (#start, #kapitel, #kap-3, #quiz …), Ereignisse
 data/                  Inhalte als JavaScript-Dateien (laufen auch ohne Server)

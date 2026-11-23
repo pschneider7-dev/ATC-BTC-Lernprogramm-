@@ -228,7 +228,8 @@
     var std = true;
     if (t.type === 'def') {
       h += '<label class="kt-lbl" for="kt-in">Deine Definition (englisch, aus dem Kopf)</label>' +
-        '<textarea id="kt-in" class="kt-in" rows="6" spellcheck="false" autocapitalize="sentences" placeholder="' + esc(t.ph != null ? t.ph : t.q + ' is …') + '"></textarea>';
+        '<textarea id="kt-in" class="kt-in" rows="6" spellcheck="false" autocapitalize="sentences" placeholder="' + esc(t.ph != null ? t.ph : t.q + ' is …') + '"></textarea>' +
+        (LP.diktatHtml ? LP.diktatHtml('kt-in') : '');
     } else if (t.type === 'abbr') {
       h += '<label class="kt-lbl" for="kt-in">Ausgeschrieben (englisch)</label>' +
         '<input id="kt-in" class="kt-in kt-one" type="text" autocomplete="off" spellcheck="false" autocapitalize="words">';

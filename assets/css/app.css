@@ -838,6 +838,17 @@ mark.kw { background: var(--accent-soft); color: inherit; }
 #kt-out { display: grid; gap: 0.6rem; }
 blockquote.kt-ref { margin: 0; font-style: normal; color: var(--ink); background: var(--card); border-left: 3px solid var(--nato); border-radius: 0 var(--r) var(--r) 0; padding: 0.7rem 1rem 0.6rem; overflow-wrap: break-word; }
 .kt-in.kt-one { min-height: 0; max-width: 30rem; }
+.diktat { margin-top: -0.25rem; }
+.diktat-ico { width: 1.15em; height: 1.15em; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.btn.ghost.diktat-btn { min-height: 2.5rem; touch-action: manipulation; }
+.btn.ghost.diktat-btn.on, .btn.ghost.diktat-btn.on:hover { border-color: var(--crit); background: var(--crit-soft); color: var(--crit); }
+.btn.ghost.diktat-btn.on .diktat-ico rect { fill: currentColor; }
+.diktat-msg:empty { display: none; }
+.diktat-hint { margin: -0.25rem 0 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .diktat-btn.on .diktat-ico { animation: diktat-puls 1.2s ease-in-out infinite; }
+  @keyframes diktat-puls { 50% { opacity: 0.35; } }
+}
 .kt-opts { display: grid; gap: 0.45rem; }
 .kt-opt, .kt-blk { width: 100%; text-align: left; font: inherit; line-height: 1.4; padding: 0.65rem 0.85rem; border: 1px solid var(--rule); border-radius: var(--r); background: var(--card); color: var(--ink); cursor: pointer; }
 .kt-opt:hover:not([disabled]), .kt-blk:hover:not([disabled]) { border-color: var(--ink); background: var(--tint); }
