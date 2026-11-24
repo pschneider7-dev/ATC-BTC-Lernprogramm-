@@ -1,10 +1,13 @@
-/* JTAC Lernprogramm – Kapitel aus einer privaten Inhaltsdatei.
-   Die Inhaltsdatei (JSON, Format „jtac-lp-inhalt“) wird auf dem Gerät importiert und nur im
-   localStorage dieses Browsers gespeichert. Sie ist nicht Teil der App und liegt nicht im Repository –
-   die App enthält nur das Gerüst: Import, Kapitelansicht und später die Aufgabentypen.
+/* JTAC Lernprogramm – Kapitel aus privaten Inhaltsdateien.
+   Inhaltsdateien (JSON, Format „jtac-lp-inhalt“) werden auf dem Gerät importiert und nur im
+   localStorage dieses Browsers gespeichert. Sie sind nicht Teil der App und liegen nicht im Repository –
+   die App enthält nur das Gerüst: Import, Kapitelansicht und die Aufgabentypen.
+   Mehrere Dateien können nebeneinander geladen sein (z. B. ATP und Doktrin); eine Datei mit derselben
+   Kennung (id, sonst doc) ersetzt beim Laden ihre ältere Fassung. Kapitel- und Aufgabenkennungen müssen
+   über alle Dateien eindeutig sein.
 
    Aufbau der Datei:
-   { format: "jtac-lp-inhalt", v: 1, doc: "…", edition: "…", stand: "JJJJ-MM-TT",
+   { format: "jtac-lp-inhalt", v: 1, id: "…" (optional), doc: "…", edition: "…", stand: "JJJJ-MM-TT",
      parts: [ { id, title, chapters: [ { id, nr, title, nodes: [ {n, t} | {sec, t} ] } ] } ] }
    n = Gliederungsnummer („3.8.1.2“, leer bei Zwischenüberschriften ohne Nummer), sec = Section-Kennung. */
 (function () {
@@ -12,19 +15,33 @@
   var LP = window.LP;
   var V = LP.views;
   var esc = LP.esc;
-  var KEY = 'jtacLP.inhalt.v1';
+  var KEY_OLD = 'jtacLP.inhalt.v1';   // früher: genau eine Datei
+  var KEY = 'jtacLP.inhalte.v1';      // jetzt: Liste von Dateien
   var FORMAT = 'jtac-lp-inhalt';
+  var fid = function (o) { return String(o.id || o.doc || 'Inhalt'); };
 
   function load() {
-    try { var r = window.localStorage.getItem(KEY); return r ? JSON.parse(r) : null; } catch (e) { return null; }
+    try {
+      var r = window.localStorage.getItem(KEY);
+      if (r) { var a = JSON.parse(r); if (Array.isArray(a)) return a; }
+      var old = window.localStorage.getItem(KEY_OLD);
+      if (old) return [JSON.parse(old)];
+    } catch (e) { /* nichts */ }
+    return [];
   }
-  function store(obj) {
-    try { window.localStorage.setItem(KEY, JSON.stringify(obj)); return true; } catch (e) { return false; }
+  function store(list) {
+    try {
+      window.localStorage.setItem(KEY, JSON.stringify(list));
+      window.localStorage.removeItem(KEY_OLD); // erst nach erfolgreichem Speichern der Liste
+      return true;
+    } catch (e) { return false; }
   }
-  function drop() {
-    try { window.localStorage.removeItem(KEY); } catch (e) { /* nichts */ }
+  // LP.inhalt bleibt eine zusammengeführte Sicht (alle Teile aller Dateien), damit der Rest der App unverändert bleibt
+  function setFiles(list) {
+    LP.inhalte = list;
+    LP.inhalt = list.length ? { format: FORMAT, files: list, parts: [].concat.apply([], list.map(function (f) { return f.parts; })) } : null;
   }
-  LP.inhalt = load();
+  setFiles(load());
 
   function check(o) {
     if (!o || o.format !== FORMAT) return 'Das ist keine Inhaltsdatei für dieses Lernprogramm.';
@@ -33,6 +50,25 @@
       return !Array.isArray(p.chapters) || p.chapters.some(function (c) { return !c.id || !c.title || !Array.isArray(c.nodes); });
     });
     return bad ? 'Die Kapitelstruktur in der Datei ist unvollständig.' : '';
+  }
+  // Kennungen dürfen nicht mit anderen geladenen Dateien kollidieren (Fortschritt hängt an den Kennungen)
+  function clash(o) {
+    var mine = fid(o), seenC = {}, seenT = {};
+    LP.inhalte.filter(function (f) { return fid(f) !== mine; }).forEach(function (f) {
+      f.parts.forEach(function (p) { p.chapters.forEach(function (c) {
+        seenC[c.id] = fid(f);
+        c.nodes.forEach(function (n) { (n.tasks || []).forEach(function (t) { seenT[t.id] = fid(f); }); });
+      }); });
+    });
+    var msg = '';
+    o.parts.some(function (p) { return p.chapters.some(function (c) {
+      if (seenC[c.id]) { msg = 'Kapitel-Kennung „' + c.id + '“ gibt es schon in „' + seenC[c.id] + '“.'; return true; }
+      return c.nodes.some(function (n) { return (n.tasks || []).some(function (t) {
+        if (seenT[t.id]) { msg = 'Aufgaben-Kennung „' + t.id + '“ gibt es schon in „' + seenT[t.id] + '“.'; return true; }
+        return false;
+      }); });
+    }); });
+    return msg;
   }
 
   function chapters() {
@@ -53,15 +89,19 @@
 
   /* ---------- Import ---------- */
   function importPanel(has) {
-    return '<div class="panel flat kap-import"><h3>' + (has ? 'Inhaltsdatei' : 'Inhaltsdatei laden') + '</h3>' +
+    var files = LP.inhalte.map(function (f) {
+      var n = f.parts.reduce(function (s, p) { return s + p.chapters.length; }, 0);
+      return '<li><span><strong>' + esc(f.doc || 'Inhalt') + '</strong>' + (f.edition ? ', ' + esc(f.edition) : '') +
+        '<br><span class="small muted">' + n + ' Kapitel' + (f.stand ? ' · Stand ' + esc(f.stand) : '') + '</span></span>' +
+        '<button class="btn ghost small" type="button" data-kap-remove="' + esc(fid(f)) + '">Entfernen</button></li>';
+    }).join('');
+    return '<div class="panel flat kap-import"><h3>' + (has ? 'Inhaltsdateien' : 'Inhaltsdatei laden') + '</h3>' +
       (has
-        ? '<p class="small">Geladen: <strong>' + esc(LP.inhalt.doc || 'Inhalt') + '</strong>' +
-          (LP.inhalt.edition ? ', ' + esc(LP.inhalt.edition) : '') + (LP.inhalt.stand ? ' · Stand ' + esc(LP.inhalt.stand) : '') + '</p>'
-        : '<p class="small">Die Kapitel kommen aus einer Inhaltsdatei, die du getrennt von der App bekommst. ' +
-          'Sie bleibt nur auf diesem Gerät gespeichert und wird nirgends hochgeladen.</p>') +
-      '<div class="row"><label class="btn' + (has ? ' ghost' : ' accent') + '">' + (has ? 'Neuere Datei laden' : 'Datei auswählen') +
+        ? '<ul class="kap-files">' + files + '</ul><p class="small muted">Eine neuere Fassung einer Datei ersetzt beim Laden die alte, der Lernstand bleibt.</p>'
+        : '<p class="small">Die Kapitel kommen aus Inhaltsdateien, die du getrennt von der App bekommst. ' +
+          'Sie bleiben nur auf diesem Gerät gespeichert und werden nirgends hochgeladen.</p>') +
+      '<div class="row"><label class="btn' + (has ? ' ghost' : ' accent') + '">' + (has ? 'Weitere oder neuere Datei laden' : 'Datei auswählen') +
       '<input type="file" accept=".json,application/json" data-kap-import class="kap-file"></label>' +
-      (has ? '<button class="btn ghost" type="button" data-kap-remove>Inhalt von diesem Gerät entfernen</button>' : '') +
       '</div><p class="small muted kap-msg" role="status"></p></div>';
   }
 
@@ -73,7 +113,9 @@
         ? 'Üben statt lesen: Definitionen, Listen und Abläufe selbst wiedergeben – zu den Stellen, die du in der Vorschrift ausgewählt hast.'
         : 'Hier erscheinen die Kapitel, sobald du deine Inhaltsdatei geladen hast.') + '</p></div>';
     if (has) {
-      h += '<section class="stack">' + LP.inhalt.parts.map(function (p) { return '<h2>' + esc(p.title) + '</h2>'; }).join('') + LP.kapitelRows() + '</section>';
+      h += LP.inhalt.parts.map(function (p) {
+        return '<section class="stack"><h2>' + esc(p.title) + '</h2>' + rowsFor(chapters().filter(function (x) { return x.p === p; })) + '</section>';
+      }).join('');
     }
     h += importPanel(has) + '</div>';
     return h;
@@ -482,14 +524,15 @@
   LP.rebuildDerived = buildDerived;
 
   /* Kapitelliste für Start- und Kapitelseite */
-  LP.kapitelRows = function () {
-    return '<div class="module-list">' + chapters().map(function (x) {
+  LP.kapitelRows = function () { return rowsFor(chapters()); };
+  function rowsFor(list) {
+    return '<div class="module-list">' + list.map(function (x) {
       var c = x.c, t = taskCount(c), d = doneCount(c);
       return '<a class="module-row" href="#kap-' + esc(c.id) + '"><span class="nr">' + esc(String(c.nr).padStart(2, '0')) + '</span>' +
         '<span><span class="t">' + esc(c.title) + '</span><br><span class="d">' + (t ? t + ' Aufgaben' : 'noch keine Aufgaben') + '</span></span>' +
         '<span class="p"><span>' + (t ? d + '/' + t + ' sitzen' : '') + '</span>' + (t ? '<span class="progress"><span style="width:' + LP.pct(d, t) + '%"></span></span>' : '') + '</span></a>';
     }).join('') + '</div>';
-  };
+  }
   LP.kapitelTotals = function () {
     var t = 0, d = 0, next = null;
     chapters().forEach(function (x) { var a = taskCount(x.c), b = doneCount(x.c); t += a; d += b; if (!next && a > b) next = x.c; });
@@ -505,13 +548,17 @@
     fr.onload = function () {
       var o;
       try { o = JSON.parse(fr.result); } catch (err) { msg('Die Datei ist kein gültiges JSON.'); return; }
-      var problem = check(o);
+      var problem = check(o) || clash(o);
       if (problem) { msg(problem); return; }
-      if (!store(o)) { msg('Speichern auf diesem Gerät ist fehlgeschlagen (Speicher voll oder privater Modus).'); return; }
-      LP.inhalt = o;
+      var list = LP.inhalte.slice(), k = -1;
+      list.forEach(function (f, i) { if (fid(f) === fid(o)) k = i; });
+      if (k >= 0) list[k] = o; else list.push(o);
+      if (!store(list)) { msg('Speichern auf diesem Gerät ist fehlgeschlagen (Speicher voll oder privater Modus).'); return; }
+      setFiles(list);
       buildDerived();
       LP.render();
-      LP.toast(LP.kapitelCount() + ' Kapitel geladen');
+      var n = o.parts.reduce(function (s, p) { return s + p.chapters.length; }, 0);
+      LP.toast((o.doc || 'Inhalt') + ': ' + n + ' Kapitel ' + (k >= 0 ? 'aktualisiert' : 'geladen'));
     };
     fr.onerror = function () { msg('Die Datei konnte nicht gelesen werden.'); };
     fr.readAsText(inp.files[0]);
@@ -523,11 +570,12 @@
     if (t.hasAttribute('data-kap-all')) { showAll = !showAll; LP.render(true); return; }
     if (t.hasAttribute('data-kap-remove')) {
       if (!t.dataset.confirm) { t.dataset.confirm = '1'; t.textContent = 'Wirklich entfernen? Erneut tippen'; return; }
-      drop(); LP.inhalt = null; S = null; buildDerived(); LP.render(); LP.toast('Inhalt entfernt'); return;
+      var id = t.getAttribute('data-kap-remove'), rest = LP.inhalte.filter(function (f) { return fid(f) !== id; });
+      store(rest); setFiles(rest); S = null; buildDerived(); LP.render(); LP.toast('Datei entfernt'); return;
     }
     if (t.hasAttribute('data-kt-start')) { startSession(t.getAttribute('data-kt-start'), null, t.hasAttribute('data-open')); return; }
     if (t.hasAttribute('data-kt-one')) {
-      var cid = (/^kap-([^-]+)/.exec(location.hash.slice(1)) || [])[1];
+      var cid = (/^kap-(.+?)(?:-ueben)?$/.exec(location.hash.slice(1)) || [])[1];
       if (cid) startSession(cid, t.getAttribute('data-kt-one'));
       return;
     }

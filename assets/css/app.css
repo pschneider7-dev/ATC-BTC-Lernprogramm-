@@ -838,6 +838,8 @@ mark.kw { background: var(--accent-soft); color: inherit; }
 #kt-out { display: grid; gap: 0.6rem; }
 blockquote.kt-ref { margin: 0; font-style: normal; color: var(--ink); background: var(--card); border-left: 3px solid var(--nato); border-radius: 0 var(--r) var(--r) 0; padding: 0.7rem 1rem 0.6rem; overflow-wrap: break-word; }
 .kt-in.kt-one { min-height: 0; max-width: 30rem; }
+.kap-files { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+.kap-files li { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; padding: 0.5rem 0; border-bottom: 1px solid var(--rule); }
 .diktat { margin-top: -0.25rem; }
 .diktat-ico { width: 1.15em; height: 1.15em; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .btn.ghost.diktat-btn { min-height: 2.5rem; touch-action: manipulation; }
