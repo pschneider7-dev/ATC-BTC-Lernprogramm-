@@ -101,7 +101,7 @@
         : '<p class="small">Die Kapitel kommen aus Inhaltsdateien, die du getrennt von der App bekommst. ' +
           'Sie bleiben nur auf diesem Gerät gespeichert und werden nirgends hochgeladen.</p>') +
       '<div class="row"><label class="btn' + (has ? ' ghost' : ' accent') + '">' + (has ? 'Weitere oder neuere Datei laden' : 'Datei auswählen') +
-      '<input type="file" accept=".json,application/json" data-kap-import class="kap-file"></label>' +
+      '<input type="file" data-kap-import class="kap-file"></label>' +
       '</div><p class="small muted kap-msg" role="status"></p></div>';
   }
 
@@ -547,7 +547,7 @@
     var fr = new FileReader();
     fr.onload = function () {
       var o;
-      try { o = JSON.parse(fr.result); } catch (err) { msg('Die Datei ist kein gültiges JSON.'); return; }
+      try { o = JSON.parse(String(fr.result).replace(/^\uFEFF/, '')); } catch (err) { msg('Die Datei ist kein gültiges JSON.'); return; }
       var problem = check(o) || clash(o);
       if (problem) { msg(problem); return; }
       var list = LP.inhalte.slice(), k = -1;
